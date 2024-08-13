@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "./img/car-logo.png";
-
+import { FaShoppingBasket } from "react-icons/fa";
 export default function Navbar() {
   return (
     <>
@@ -19,7 +19,9 @@ export default function Navbar() {
               <Link href="/menu">About us</Link>
             </div>
           </div>
-          <div className="user flex items-center">user</div>
+          <div className="user flex items-center">
+            <FaShoppingBasket className="text-3xl" />
+          </div>
         </div>
       </div>
     </>

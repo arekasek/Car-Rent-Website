@@ -1,0 +1,9 @@
+@font-face {
+  font-family: "Thunder";
+  src: url("./Thunder-BoldLC.ttf");
+  font-weight: normal;
+  font-style: normal;
+}
+.thunder {
+  font-family: Thunder;
+}
