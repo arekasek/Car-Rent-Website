@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const { color } = require("framer-motion");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -11,26 +12,31 @@ app.get("/api/cars", (req, res) => {
       brand: "Mini",
       model: "Cooper",
       image: "https://i.postimg.cc/wMyY2bp2/mini.png",
+      color: "#890616",
     },
     {
       brand: "Ford",
       model: "Fiesta",
       image: "https://i.postimg.cc/zvzMVtdp/mustang.png",
+      color: "#0065B2",
     },
     {
       brand: "Lamborghini",
       model: "Huracan",
       image: "https://i.postimg.cc/CM8ptXDT/lamborghini.png",
+      color: "#5194D5",
     },
     {
       brand: "Chevrolet",
       model: "Corvette",
       image: "https://i.postimg.cc/jS7sYWyd/corvette1.png",
+      color: "#EFCE00",
     },
     {
       brand: "Ford",
       model: "Mustang",
       image: "https://i.postimg.cc/pdFsPvdH/mustang2.png",
+      color: "#C99330",
     },
   ]);
 });
