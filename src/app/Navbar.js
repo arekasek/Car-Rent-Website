@@ -5,7 +5,7 @@ import { FaShoppingBasket } from "react-icons/fa";
 export default function Navbar() {
   return (
     <>
-      <div className="w-full flex justify-center items-center font-sans text-black font-light fixed z-0">
+      <div className="w-full flex justify-center items-center font-sans text-black font-light fixed z-50">
         <div className="w-5/6 flex flex-row justify-between items-center">
           <div className="logo flex items-center">
             <Image

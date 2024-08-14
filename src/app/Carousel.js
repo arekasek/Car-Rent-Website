@@ -96,7 +96,7 @@ export default function Carousel() {
           onClick={handleOverlayClick}
         >
           <div
-            className="relative w-3/5 p-8 inset-0 h-fit shadow-popup bg-[#e5e6eb] z-0 flex flex-col items-center justify-center transition-transform duration-700 ease-in-out transform"
+            className="relative rounded-lg w-[35vw] p-8 inset-0 h-fit shadow-popup bg-[#e5e6eb] z-0 flex flex-col items-center justify-center transition-transform duration-700 ease-in-out transform"
             style={{
               transform: isDetailsVisible
                 ? "translateY(0)"
@@ -107,29 +107,32 @@ export default function Carousel() {
               className="absolute -top-7 -right-7 p-2 rounded-full text-6xl text-black cursor-pointer"
               onClick={closeDetails}
             />
-
-            <div className="w-full flex flex-col justify-center items-center">
-              <div className="w-full h-[30vh]">
+            <div className="w-full flex flex-col justify-center items-center gap-6">
+              <div className="relative w-full h-[20vh] flex justify-center items-center">
                 <img
                   src={selectedCar?.imageFront}
                   alt={selectedCar?.brand}
                   className="w-full h-full object-contain"
                 />
               </div>
-
-              <h1 className="text-4xl font-bold mb-4">{selectedCar?.model}</h1>
-              <p className="text-lg mb-8">{selectedCar?.brand}</p>
-
-              <div className="w-full h-[20vh]">
-                <Scrollbars className="w-full h-[20vh]" autoHide>
-                  <table className="w-full text-left font-sans">
+              <div className="text-center flex flex-row gap-6 items-center">
+                <h1 className="text-2xl text-black font-sans font-bold">
+                  {selectedCar?.brand.toUpperCase()}
+                </h1>
+                <p className="text-8xl text-[#6e6e6e] font-bold vibes">
+                  {selectedCar?.model}
+                </p>
+              </div>
+              <div className="w-4/5 h-[20vh]">
+                <Scrollbars className="w-full h-[20vh]">
+                  <table className="w-full text-left font-sans text-lg">
                     {selectedCar?.data &&
                       Object.entries(selectedCar.data).map(([key, value]) => (
                         <tr
                           className=" border-b-gray-300  odd:bg-[#c0c2ce]"
                           key={key}
                         >
-                          <td className="text-left px-5 py-1">
+                          <td className="text-left px-5 py-1 font-semibold">
                             {key.charAt(0).toUpperCase() + key.slice(1)}:
                           </td>{" "}
                           <td className="text-right px-5 py-1">{value}</td>
@@ -137,6 +140,14 @@ export default function Carousel() {
                       ))}
                   </table>
                 </Scrollbars>
+              </div>
+              <div className="w-full flex justify-center items-center">
+                <Button
+                  className="w-2/5 p-8 font-sans shadow-button text-xl text-white"
+                  style={{ backgroundColor: selectedCar.color }}
+                >
+                  Rent
+                </Button>
               </div>
             </div>
           </div>
