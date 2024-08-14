@@ -13,6 +13,17 @@ app.get("/api/cars", (req, res) => {
       model: "Cooper",
       image: "https://i.postimg.cc/wMyY2bp2/mini.png",
       color: "#890616",
+      imageFront: "/img/mini-front.png",
+      data: {
+        engine: "1.6L I-4 Engine",
+        horsePower: "172 HP",
+        fuel: "benzine",
+        transmission: "manual",
+        doors: "3",
+        seats: "5",
+        description: "nice car",
+        year: "2015",
+      },
     },
     {
       brand: "Ford",

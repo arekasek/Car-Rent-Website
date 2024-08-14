@@ -1,15 +1,19 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import logo from "./img/car-logo.png";
 import { FaShoppingBasket } from "react-icons/fa";
 export default function Navbar() {
   return (
     <>
-      <div className="w-full flex justify-center items-center font-sans text-black font-light fixed z-10">
+      <div className="w-full flex justify-center items-center font-sans text-black font-light fixed z-0">
         <div className="w-5/6 flex flex-row justify-between items-center">
           <div className="logo flex items-center">
-            <Image src={logo} alt="logo" width={100} height={100} />
+            <Image
+              src="/img/car-logo.png"
+              alt="logo"
+              width={100}
+              height={100}
+            />
           </div>
           <div className="menu">
             <div className="flex flex-row gap-32 items-center">
