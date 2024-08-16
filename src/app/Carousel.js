@@ -92,7 +92,7 @@ export default function Carousel() {
 
       {isDetailsVisible && (
         <div
-          className="fixed h-full w-full flex justify-center items-center"
+          className="fixed h-full w-full flex justify-center items-center glass-effect-container"
           onClick={handleOverlayClick}
         >
           <div
@@ -108,11 +108,14 @@ export default function Carousel() {
               onClick={closeDetails}
             />
             <div className="w-full flex flex-col justify-center items-center gap-6">
-              <div className="relative w-full h-[20vh] flex justify-center items-center">
+              <div className="relative w-full flex justify-center items-center -mt-[100px]">
                 <img
                   src={selectedCar?.imageFront}
                   alt={selectedCar?.brand}
-                  className="w-full h-full object-contain"
+                  className="relative w-full h-[20vh] object-contain z-10"
+                  style={{
+                    marginTop: "-10px",
+                  }}
                 />
               </div>
               <div className="text-center flex flex-row gap-6 items-center">
