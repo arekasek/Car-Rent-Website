@@ -5,7 +5,7 @@ import { FaInstagramSquare } from "react-icons/fa";
 export default function Sidebar() {
   return (
     <>
-      <div className="absolute bottom-0 right-0 z-50">
+      <div className="absolute bottom-0 right-0 z-50 hidden md:block">
         <div className="flex flex-col text-3xl gap-4 p-8 text-[#4D4D4D]">
           <button>
             <FaFacebook />

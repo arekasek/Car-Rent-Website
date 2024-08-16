@@ -3,6 +3,7 @@ import Navbar from "./Navbar";
 import Carousel from "./Carousel";
 import Sidebar from "./Sidebar";
 import { MdArrowDropDown } from "react-icons/md";
+import HamburgerMenu from "./Ham-menu";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
         <Navbar />
         <Carousel />
         <Sidebar />
+        <HamburgerMenu />
       </div>
     </>
   );
