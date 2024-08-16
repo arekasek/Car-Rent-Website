@@ -63,3 +63,7 @@ html {
   -webkit-background-clip: text;
   background-clip: text;
 }
+.glass-effect-container {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(25px);
+}

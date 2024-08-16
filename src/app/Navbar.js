@@ -45,6 +45,7 @@ export default function Navbar() {
               <Hamburger
                 direction="left"
                 easing="ease-in"
+                color={isMenuOpen ? "white" : "black"}
                 size={35}
                 toggled={isMenuOpen}
                 toggle={toggleMenu}

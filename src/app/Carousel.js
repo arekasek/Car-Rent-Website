@@ -96,7 +96,7 @@ export default function Carousel() {
           onClick={handleOverlayClick}
         >
           <div
-            className="relative rounded-lg w-[35vw] p-8 inset-0 h-fit shadow-popup bg-[#e5e6eb] z-0 flex flex-col items-center justify-center transition-transform duration-700 ease-in-out transform"
+            className="relative rounded-lg 2xl:w-[35vw] xl:w-[40vw] lg:w-[50vw] md:w-[60vw] sm:w-[70vw] w-[90vw] p-8 inset-0 h-fit shadow-popup bg-[#e5e6eb] z-0 flex flex-col items-center justify-center transition-transform duration-700 ease-in-out transform"
             style={{
               transform: isDetailsVisible
                 ? "translateY(0)"
@@ -119,13 +119,13 @@ export default function Carousel() {
                 <h1 className="text-2xl text-black font-sans font-bold">
                   {selectedCar?.brand.toUpperCase()}
                 </h1>
-                <p className="text-8xl text-[#6e6e6e] font-bold vibes">
+                <p className="text-4xl sm:text-6xl text-[#6e6e6e] font-bold vibes">
                   {selectedCar?.model}
                 </p>
               </div>
-              <div className="w-4/5 h-[20vh]">
+              <div className="w-full sm:w-4/5 h-[20vh]">
                 <Scrollbars className="w-full h-[20vh]">
-                  <table className="w-full text-left font-sans text-lg">
+                  <table className="w-full text-left font-sans md:text-lg text-sm">
                     {selectedCar?.data &&
                       Object.entries(selectedCar.data).map(([key, value]) => (
                         <tr

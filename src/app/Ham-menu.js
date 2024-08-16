@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import Link from "next/link";
 
@@ -14,8 +15,8 @@ export default function HamburgerMenu({ isOpen, closeMenu }) {
   return (
     <>
       {isOpen && (
-        <div className="fixed bottom-0 right-0 z-20 bg-[#000000] h-full w-[100vw] text-white sm:hidden block opacity-80">
-          <div className="flex flex-col text-4xl gap-8 p-8 text-[#fff] items-center justify-between mt-[100px] h-[80vh]">
+        <div className="fixed bottom-0 right-0 z-20 h-full w-[100vw] text-white sm:hidden block glass-effect-container">
+          <div className="flex flex-col text-4xl gap-8 p-8 items-center justify-between mt-[100px] h-[80vh]">
             <div className="flex flex-col gap-6 font-sans">
               <Link href="/menu" onClick={closeMenu}>
                 <div className="flex flex-row items-center gap-4">
