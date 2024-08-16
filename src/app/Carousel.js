@@ -17,7 +17,7 @@ export default function Carousel() {
   const [selectedCar, setSelectedCar] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/cars")
+    fetch("https://car-rent-website.onrender.com/api/cars")
       .then((response) => response.json())
       .then((data) => setCars(data))
       .catch((error) => console.error("Error fetching cars:", error));
