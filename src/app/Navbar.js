@@ -1,13 +1,39 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import HamburgerMenu from "./Ham-menu";
 import { FaShoppingBasket } from "react-icons/fa";
 import { Turn as Hamburger } from "hamburger-react";
+import gsap from "gsap";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    gsap.fromTo(
+      "#logo",
+      { opacity: 0, scale: 0.5, xPercent: -100 },
+      { opacity: 1, scale: 1, duration: 0.5, ease: "power2.out", xPercent: 0 }
+    );
+    gsap.fromTo(
+      "#animate-icon",
+      { opacity: 0, scale: 0.5, xPercent: 100 },
+      { opacity: 1, scale: 1, duration: 0.5, ease: "power2.out", xPercent: 0 }
+    );
+    gsap.fromTo(
+      ".menu-link",
+      { opacity: 0, y: -20 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        ease: "power2.out",
+        stagger: 0.2,
+        delay: 1,
+      }
+    );
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -27,21 +53,32 @@ export default function Navbar() {
               alt="logo"
               width={100}
               height={100}
+              id="logo"
             />
           </div>
           <div className="menu hidden sm:flex">
             <div className="flex flex-row 2xl:gap-32 xl:gap-32 lg:gap-10 md:gap-8 sm:gap-4 gap-4 items-center">
-              <Link href="/menu">Home</Link>
-              <Link href="/menu">Offer</Link>
-              <Link href="/menu">Contact</Link>
-              <Link href="/menu">About us</Link>
+              <Link href="/menu" className="menu-link">
+                Home
+              </Link>
+              <Link href="/menu" className="menu-link">
+                Offer
+              </Link>
+              <Link href="/menu" className="menu-link">
+                Contact
+              </Link>
+              <Link href="/menu" className="menu-link">
+                About us
+              </Link>
             </div>
           </div>
           <div className="user flex items-center">
             <div className="hidden sm:block">
-              <FaShoppingBasket className="text-3xl" />
+              <button>
+                <FaShoppingBasket className="text-3xl" id="animate-icon" />
+              </button>
             </div>
-            <div className="block sm:hidden z-50">
+            <div className="block sm:hidden z-50" id="animate-icon">
               <Hamburger
                 direction="left"
                 easing="ease-in"

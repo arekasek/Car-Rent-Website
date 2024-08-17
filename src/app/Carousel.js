@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Slider from "react-slick";
 import Image from "next/image";
+import gsap from "gsap";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "./fonts/menu-font.css";
@@ -22,6 +23,27 @@ export default function Carousel() {
       .then((data) => setCars(data))
       .catch((error) => console.error("Error fetching cars:", error));
   }, []);
+
+  useEffect(() => {
+    gsap.fromTo(
+      ".slick-slide",
+      { opacity: 0, x: -100 },
+      { opacity: 1, x: 0, duration: 1.5, ease: "power2.out", stagger: 0.3 }
+    );
+
+    gsap.fromTo(
+      "#car-model, #car-brand",
+      { opacity: 0, y: 50 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        ease: "power2.out",
+        stagger: 0.2,
+        delay: 0.5,
+      }
+    );
+  }, [cars]);
 
   const settings = {
     dots: true,
@@ -67,11 +89,15 @@ export default function Carousel() {
                   WebkitBackgroundClip: "text",
                   backgroundClip: "text",
                 }}
+                id="car-model"
               >
                 {car.model.toUpperCase()}
               </h1>
 
-              <h1 className="text-[#000000] absolute vibes top-[25%] 2xl:top-[2%] xl:top-[8%] lg:top-[10%] md:top-[15%] sm:top-[20%] left-1/2 transform -translate-x-1/2 vibes -z-10 text-wrap text-center 2xl:text-[5vw] xl:text-[8vw] lg:text-[5vw] md:text-[7vw] sm:text-[5vw] text-[15vw]">
+              <h1
+                id="car-brand"
+                className="text-[#000000] absolute vibes top-[25%] 2xl:top-[2%] xl:top-[8%] lg:top-[10%] md:top-[15%] sm:top-[20%] left-1/2 transform -translate-x-1/2 vibes -z-10 text-wrap text-center 2xl:text-[5vw] xl:text-[8vw] lg:text-[5vw] md:text-[7vw] sm:text-[5vw] text-[15vw]"
+              >
                 {car.brand}
               </h1>
 

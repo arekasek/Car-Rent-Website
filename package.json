@@ -16,6 +16,7 @@
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "framer-motion": "^11.3.24",
+    "gsap": "^3.12.5",
     "hamburger-react": "^2.5.1",
     "next": "14.2.5",
     "rc-scrollbars": "^1.1.6",
