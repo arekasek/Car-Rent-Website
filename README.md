@@ -1,8 +1,6 @@
 # RENT A CAR - example website
 
-![main-website](image.png)
-![mobile-website](image-1.png)
-![com-website](image-2.png)
+<img src="https://github.com/user-attachments/assets/9643184d-ac12-4252-b795-4d723eca02f8" width="45%"></img> <img src="https://github.com/user-attachments/assets/316a1523-f7b2-4a1b-9bb1-8437c587c716" width="45%"></img> <img src="https://github.com/user-attachments/assets/acf6284f-4a63-4879-8a77-1d56a42562dd" width="25%"></img>
 
 ## Description
 
