@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import HamburgerMenu from "./Ham-menu";
-import { FaShoppingBasket } from "react-icons/fa";
+import { SlBasket } from "react-icons/sl";
 import { Turn as Hamburger } from "hamburger-react";
 import gsap from "gsap";
 
@@ -75,7 +75,7 @@ export default function Navbar() {
           <div className="user flex items-center">
             <div className="hidden sm:block">
               <button>
-                <FaShoppingBasket className="text-3xl" id="animate-icon" />
+                <SlBasket className="text-3xl" id="animate-icon" />
               </button>
             </div>
             <div className="block sm:hidden z-50" id="animate-icon">
