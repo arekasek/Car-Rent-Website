@@ -1,0 +1,49 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { fetchCars } from "@/lib/fetchCars";
+import FilterContainer from "../components/FilterContainer";
+import SortingBar from "../components/SortingBar";
+import CarInfoCard from "../components/CarInfoCard";
+
+export default function Page() {
+  const [cars, setCars] = useState([]);
+  const [cols, setCols] = useState(2);
+  const [filters, setFilters] = useState({
+    search: "",
+    fuels: [],
+    chassis: [],
+    transmissions: [],
+    seats: [],
+  });
+  const [sortOption, setSortOption] = useState("");
+
+  useEffect(() => {
+    fetchCars()
+      .then((data) => {
+        console.log("Fetched cars (page):", data?.length ?? 0);
+        setCars(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.error("fetchCars error:", err);
+        setCars([]);
+      });
+  }, []);
+
+  return (
+    <div className="flex items-center justify-center p-8 pt-0">
+      <div className="w-[80vw] h-full flex gap-8 flex-col md:flex-row">
+        <FilterContainer onFilterChange={setFilters} />
+
+        <div className="flex-1 flex flex-col gap-6 w-full">
+          <SortingBar onSortChange={setSortOption} onColsChange={setCols} />
+          <CarInfoCard
+            cars={cars}
+            filters={filters}
+            sortOption={sortOption}
+            cols={cols}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
