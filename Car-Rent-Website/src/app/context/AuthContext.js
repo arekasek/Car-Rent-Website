@@ -10,18 +10,36 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      // Check localStorage for saved user
-      const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+    const loadUser = () => {
+      try {
+        const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+        console.log("AuthContext: Loading user from storage:", savedUser);
+        if (savedUser) {
+          const parsedUser = JSON.parse(savedUser);
+          console.log("AuthContext: User loaded:", parsedUser);
+          setUser(parsedUser);
+        } else {
+          console.log("AuthContext: No user found in storage");
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Auth check error:", error);
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    // Load user on mount
+    loadUser();
+
+    const handleStorageChange = () => {
+      console.log("AuthContext: Storage changed");
+      loadUser();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const logout = async () => {

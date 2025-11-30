@@ -22,7 +22,13 @@ router.post("/signin", async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    return res.json({ data });
+    // Return user and session
+    return res.json({
+      data: {
+        user: data.user,
+        session: data.session,
+      },
+    });
   } catch (error) {
     console.error("Sign in error:", error);
     return res.status(500).json({ error: error.message });
@@ -48,7 +54,13 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    return res.json({ data });
+    // Return user and session
+    return res.json({
+      data: {
+        user: data.user,
+        session: data.session,
+      },
+    });
   } catch (error) {
     console.error("Sign up error:", error);
     return res.status(500).json({ error: error.message });

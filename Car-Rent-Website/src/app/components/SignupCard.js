@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { MdOutlineMailLock } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
@@ -12,6 +13,7 @@ export default function SignupCard({ onSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleSignup = async () => {
     setLoading(true);
@@ -38,6 +40,10 @@ export default function SignupCard({ onSuccess }) {
 
       alert("Signup successful. Check your email to confirm your account.");
       if (typeof onSuccess === "function") onSuccess(data);
+
+      setTimeout(() => {
+        router.push("/");
+      }, 500);
     } catch (err) {
       console.error(err);
       alert("Signup error");

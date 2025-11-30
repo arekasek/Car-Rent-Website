@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // ICONS
 import { MdOutlineMailLock } from "react-icons/md";
@@ -13,6 +14,7 @@ function LoginCard({ onSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async () => {
     setLoading(true);
@@ -33,12 +35,20 @@ function LoginCard({ onSuccess }) {
         return;
       }
 
+      console.log("Login response data:", data);
       if (data.data?.user) {
+        console.log("Saving user to localStorage:", data.data.user);
         localStorage.setItem("auth_user", JSON.stringify(data.data.user));
+      } else {
+        console.warn("No user data in response:", data);
       }
 
       alert("Zalogowano!");
       if (typeof onSuccess === "function") onSuccess(data);
+
+      setTimeout(() => {
+        router.push("/");
+      }, 500);
     } catch (err) {
       console.error(err);
       alert("Login error");
