@@ -1,6 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=Exo:ital,wght@0,100..900;1,100..900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap");
 
+@font-face {
+  font-family: "Thunder";
+  src: url("/fonts/Thunder-BoldLC.woff2") format("woff2"),
+    url("/fonts/Thunder-BoldLC.woff") format("woff"),
+    url("/fonts/Thunder-BoldLC.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

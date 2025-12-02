@@ -12,6 +12,8 @@ import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
 import ShoppingCartModal from "@/app/components/ShoppingCartModal";
 import gsap from "gsap";
+import "./fonts/vibes-font.css";
+import "./fonts/thunder-font.css";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
