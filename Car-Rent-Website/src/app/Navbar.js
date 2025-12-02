@@ -62,7 +62,7 @@ export default function Navbar() {
           isMainPage ? "fixed top-0 left-0 right-0" : ""
         } w-full flex justify-center items-center font-sans text-black font-light z-50 h-[10vh]`}
       >
-        <div className="w-5/6 flex flex-row justify-between items-center">
+        <div className="w-full px-8 flex flex-row justify-between items-center">
           <div className="logo flex items-center">
             <Image
               src="/img/car-logo.png"

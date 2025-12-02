@@ -5,9 +5,6 @@ import Image from "next/image";
 import gsap from "gsap";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import "./fonts/menu-font.css";
-import "./fonts/thunder-font.css";
-import "./fonts/vibes-font.css";
 import { ImCross } from "react-icons/im";
 import { Button } from "@nextui-org/button";
 import { Scrollbars } from "rc-scrollbars";
@@ -101,7 +98,7 @@ export default function Carousel() {
 
               <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2">
                 <Button
-                  className="p-6 w-[250px] font-sans shadow-button text-xl text-white"
+                  className="p-4 w-[250px] font-sans shadow-button rounded-xl text-xl text-white"
                   auto
                   style={{ backgroundColor: car.color }}
                   onClick={() => handleDetailsClick(car)}

@@ -22,7 +22,6 @@ router.post("/signin", async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    // Return user and session
     return res.json({
       data: {
         user: data.user,
@@ -54,7 +53,6 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    // Return user and session
     return res.json({
       data: {
         user: data.user,

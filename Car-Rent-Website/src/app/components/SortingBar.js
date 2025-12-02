@@ -12,7 +12,7 @@ export default function SortingBar({ onSortChange, onColsChange }) {
   };
 
   return (
-    <div className="w-full bg-slate-500/10 h-[10vh] card-item-shadow flex items-center justify-center">
+    <div className="w-full border border-gray-400/50 border-x-0 h-[10vh] flex items-center justify-center">
       <button
         className="bg-white/90 p-2 rounded-lg mx-4"
         onClick={() => onColsChange?.((prev) => (prev === 2 ? 1 : 2))}

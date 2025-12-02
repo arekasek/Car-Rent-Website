@@ -163,94 +163,112 @@ function CarInfoCard({
 
   const colClass =
     {
-      1: "xl:grid-cols-1",
-      2: "xl:grid-cols-2",
-    }[cols] || "xl:grid-cols-2";
+      1: "xl:grid-cols-2",
+      2: "xl:grid-cols-3",
+    }[cols] || "xl:grid-cols-3";
+
+  const carAbilities = (car) => {
+    return (
+      <>
+        <p className="font-sans text-sm text-gray-700 border border-gray-500/50 px-5 py-1 rounded-lg ">
+          {car.data.engine || "Engine info not available"}
+        </p>
+        <p className="font-sans text-sm text-gray-700 border border-gray-500/50 px-5 py-1 rounded-lg ">
+          {car.data?.chassis || "Chassis info not available"}
+        </p>
+      </>
+    );
+  };
 
   return (
     <div
-      className={`h-auto w-full grid grid-cols-1 ${colClass} gap-8 md:gap-6 lg:gap-10`}
+      className={`h-auto w-full grid grid-cols-1 ${colClass} p-6 gap-8 md:gap-6 lg:gap-6`}
     >
       {sortedCars.map((car, index) => (
         <div
           key={car.id ?? index}
-          className="card-item-shadow flex flex-col items-center gap-4 justify-center p-4 sm:p-6 rounded-lg w-full relative"
+          className="flex flex-col items-center gap-4 w-full relative p-6 overflow-hidden bg-gradient-to-br from-transparent via-white/80  to-gray-400/50"
         >
-          <div className="absolute top-0 right-0 z-10 flex flex-row items-center">
-            <div className="bg-green-500/50 p-2 rounded-lg text-green-800 font-sans font-semibold">
-              Available now
+          <div className="w-full relative flex flex-row items-center justify-between">
+            <div>
+              <h2 className="font-sans text-xl font-bold text-gray-900">
+                {car.brand} {car.model}
+              </h2>
             </div>
 
-            {likedCars.includes(car) ? (
-              <AiFillHeart
-                className="text-2xl sm:text-3xl m-4 text-red-500 cursor-pointer"
-                onClick={() => handleLike(car)}
-              />
-            ) : (
-              <AiOutlineHeart
-                className="text-2xl sm:text-3xl m-4 text-gray-500 cursor-pointer"
-                onClick={() => handleLike(car)}
-              />
-            )}
-          </div>
+            <div className="z-10 flex flex-row items-center gap-2">
+              <div className="bg-green-500/80 px-3 py-1 rounded-full text-green-900 font-sans text-xs font-semibold">
+                Available
+              </div>
 
-          <div className="relative w-[400px] h-[160px]">
+              {likedCars.includes(car) ? (
+                <AiFillHeart
+                  className="text-2xl text-red-500 cursor-pointer hover:scale-110 transition"
+                  onClick={() => handleLike(car)}
+                />
+              ) : (
+                <AiOutlineHeart
+                  className="text-2xl text-gray-400 cursor-pointer hover:scale-110 transition"
+                  onClick={() => handleLike(car)}
+                />
+              )}
+            </div>
+          </div>
+          <div className="w-full flex flex-row gap-2">{carAbilities(car)}</div>
+          <div className="relative w-full h-48 mt-8">
             {car.imagefront ? (
               <Image
                 src={car.imagefront}
                 alt="car image"
                 fill
-                className="object-cover"
+                className="object-contain"
+                style={{
+                  filter: "drop-shadow(0 15px 30px rgba(0, 0, 0, 0.15))",
+                }}
               />
             ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
                 No Image
               </div>
             )}
           </div>
 
-          <div className="w-full">
-            <div className="flex flex-row justify-between items-center">
-              <div>
-                <h2 className="font-sans text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900/90">
-                  {car.brand} <span className="font-sans">{car.model}</span>
-                </h2>
-                <h3 className="text-gray-500 font-sans">{car.data?.engine}</h3>
-              </div>
-
-              <div className="relative flex flex-row items-baseline">
-                <h3>
-                  <span className="text-4xl font-sans">{getPrice(car)}$</span>
-                </h3>
-                <p className="translate-y-[5px] text-gray-500 font-sans">
-                  /day
-                </p>
-              </div>
+          {/* Content Section */}
+          <div className="w-full px-5 pb-5">
+            {/* Price Section */}
+            <div className="flex flex-row items-baseline gap-1 mb-3">
+              <span className="text-3xl font-sans font-bold text-gray-900">
+                {getPrice(car)}$
+              </span>
+              <span className="text-gray-500 font-sans text-sm">/day</span>
             </div>
 
-            <div className="line w-full border-b-2 border-black my-2 opacity-10"></div>
+            {/* Specs Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <InfoItem
+                icon={LuCar}
+                label="chassis"
+                value={car.data?.chassis}
+              />
+              <InfoItem
+                icon={IoMdSpeedometer}
+                label="fuel"
+                value={car.data?.fuel}
+              />
+              <InfoItem
+                icon={TbManualGearbox}
+                label="transmission"
+                value={car.data?.transmission}
+              />
+              <InfoItem
+                icon={PiSeatbelt}
+                label="seats"
+                value={`${car.data?.seats ?? "0"} seats`}
+              />
+            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 md:gap-8 w-full justify-center">
-            <InfoItem icon={LuCar} label="chassis" value={car.data?.chassis} />
-            <InfoItem
-              icon={IoMdSpeedometer}
-              label="fuel"
-              value={car.data?.fuel}
-            />
-            <InfoItem
-              icon={TbManualGearbox}
-              label="transmission"
-              value={car.data?.transmission}
-            />
-            <InfoItem
-              icon={PiSeatbelt}
-              label="seats"
-              value={`${car.data?.seats ?? "0"} seats`}
-            />
-          </div>
-
-          <Button
+          {/* <Button
             onClick={() => {
               if (!user) {
                 router.push("/login");
@@ -267,7 +285,7 @@ function CarInfoCard({
             title={user ? "Add to cart" : "Login to add to cart"}
           >
             {user ? "Add to Cart" : "Login to Add to Cart"}
-          </Button>
+          </Button> */}
         </div>
       ))}
     </div>

@@ -30,11 +30,11 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center p-8 pt-0">
-      <div className="w-[80vw] h-full flex gap-8 flex-col md:flex-row">
+    <div className="flex items-center justify-center pt-0">
+      <div className="w-full h-full flex flex-col md:flex-row">
         <FilterContainer onFilterChange={setFilters} />
 
-        <div className="flex-1 flex flex-col gap-6 w-full">
+        <div className="flex-1 flex flex-col gap-4 w-full">
           <SortingBar onSortChange={setSortOption} onColsChange={setCols} />
           <CarInfoCard
             cars={cars}
