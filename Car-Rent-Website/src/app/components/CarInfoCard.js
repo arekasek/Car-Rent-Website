@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
@@ -187,7 +188,8 @@ function CarInfoCard({
       {sortedCars.map((car, index) => (
         <div
           key={car.id ?? index}
-          className="flex flex-col items-center gap-4 w-full relative p-6 overflow-hidden bg-gradient-to-br from-transparent via-white/80  to-gray-400/50"
+          className="flex flex-col items-center gap-4 w-full relative p-6 overflow-hidden bg-gradient-to-br from-transparent via-white/80  to-gray-400/50 rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform"
+          onClick={() => router.push(`/car/${car.id}`)}
         >
           <div className="w-full relative flex flex-row items-center justify-between">
             <div>
@@ -233,9 +235,7 @@ function CarInfoCard({
             )}
           </div>
 
-          {/* Content Section */}
           <div className="w-full px-5 pb-5">
-            {/* Price Section */}
             <div className="flex flex-row items-baseline gap-1 mb-3">
               <span className="text-3xl font-sans font-bold text-gray-900">
                 {getPrice(car)}$
@@ -243,7 +243,6 @@ function CarInfoCard({
               <span className="text-gray-500 font-sans text-sm">/day</span>
             </div>
 
-            {/* Specs Grid */}
             <div className="grid grid-cols-2 gap-3">
               <InfoItem
                 icon={LuCar}

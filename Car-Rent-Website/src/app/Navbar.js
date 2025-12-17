@@ -49,6 +49,17 @@ export default function Navbar() {
     );
   }, []);
 
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isMenuOpen]);
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -61,8 +72,10 @@ export default function Navbar() {
     <>
       <div
         className={`${
-          isMainPage ? "fixed top-0 left-0 right-0" : ""
-        } w-full flex justify-center items-center font-sans text-black font-light z-50 h-[10vh]`}
+          isMainPage
+            ? "fixed top-0 left-0 right-0 h-[10vh]"
+            : "relative h-[10vh] "
+        } w-full flex justify-center items-center font-sans text-black font-light z-50 min-h-[60px]`}
       >
         <div className="w-full px-8 flex flex-row justify-between items-center">
           <div className="logo flex items-center">
@@ -74,12 +87,12 @@ export default function Navbar() {
               id="logo"
             />
           </div>
+
           <div className="menu hidden sm:flex">
             <div className="flex flex-row 2xl:gap-32 xl:gap-32 lg:gap-10 md:gap-8 sm:gap-4 gap-4 items-center">
               <Link href="/" className="menu-link">
                 Home
               </Link>
-
               <Link href="/offer" className="menu-link">
                 Offer
               </Link>
@@ -91,6 +104,7 @@ export default function Navbar() {
               </Link>
             </div>
           </div>
+
           <div className="user flex items-center flex-row-reverse gap-6">
             <div className="hidden sm:block">
               <button
@@ -112,6 +126,7 @@ export default function Navbar() {
                 )}
               </button>
             </div>
+
             <div className="hidden sm:block">
               {user ? (
                 <button
@@ -127,6 +142,7 @@ export default function Navbar() {
                 </Link>
               )}
             </div>
+
             <div className="block sm:hidden z-50" id="animate-icon">
               <Hamburger
                 direction="left"

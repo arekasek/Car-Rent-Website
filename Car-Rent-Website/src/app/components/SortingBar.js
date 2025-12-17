@@ -12,27 +12,33 @@ export default function SortingBar({ onSortChange, onColsChange }) {
   };
 
   return (
-    <div className="w-full border border-gray-400/50 border-x-0 h-[10vh] flex items-center justify-center">
-      <button
-        className="bg-white/90 p-2 rounded-lg mx-4"
-        onClick={() => onColsChange?.((prev) => (prev === 2 ? 1 : 2))}
-      >
-        <PiSquaresFourLight className="text-2xl" />
-      </button>
-      <select
-        value={value}
-        onChange={handle}
-        className="bg-white/90 p-2 rounded-lg mx-4"
-        aria-label="Sort cars"
-      >
-        <option value="">Sort by</option>
-        <option value="price-asc">Price (low → high)</option>
-        <option value="price-desc">Price (high → low)</option>
-        <option value="brand-asc">Brand (A → Z)</option>
-        <option value="brand-desc">Brand (Z → A)</option>
-        <option value="seats-asc">Seats (few → many)</option>
-        <option value="seats-desc">Seats (many → few)</option>
-      </select>
+    <div className="w-full border border-gray-400/50 border-x-0 h-[10vh] flex items-center justify-between">
+      <span className="mx-4 text-gray-700 text-3xl font-sans font-light">
+        Find your dream car!
+      </span>
+      <div className="flex flex-row-reverse items-center justify-center">
+        <button
+          className="bg-white/90 p-2 rounded-lg mr-4"
+          onClick={() => onColsChange?.((prev) => (prev === 2 ? 1 : 2))}
+        >
+          <PiSquaresFourLight className="text-2xl" />
+        </button>
+
+        <select
+          value={value}
+          onChange={handle}
+          className="bg-white/90 p-2 rounded-lg mx-4"
+          aria-label="Sort cars"
+        >
+          <option value="">Sort by</option>
+          <option value="price-asc">Price (low → high)</option>
+          <option value="price-desc">Price (high → low)</option>
+          <option value="brand-asc">Brand (A → Z)</option>
+          <option value="brand-desc">Brand (Z → A)</option>
+          <option value="seats-asc">Seats (few → many)</option>
+          <option value="seats-desc">Seats (many → few)</option>
+        </select>
+      </div>
     </div>
   );
 }

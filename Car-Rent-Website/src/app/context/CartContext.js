@@ -9,7 +9,6 @@ export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     try {
       const savedCart = localStorage.getItem(CART_STORAGE_KEY);
@@ -65,7 +64,10 @@ export function CartProvider({ children }) {
   };
 
   const getTotalPrice = () => {
-    return cartItems.reduce((total, item) => total + 23 * item.rentalDays, 0);
+    return cartItems.reduce((total, item) => {
+      const price = item.data?.price || 0;
+      return total + price * item.rentalDays;
+    }, 0);
   };
 
   return (

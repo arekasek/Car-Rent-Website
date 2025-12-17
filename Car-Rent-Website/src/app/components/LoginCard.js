@@ -58,9 +58,9 @@ function LoginCard({ onSuccess }) {
   };
 
   return (
-    <div className="flex flex-row login-box-shadow rounded-lg font-sans">
-      <div className="w-[30vw] h-[50vh] flex flex-col items-center justify-center gap-6 p-8">
-        <div className="w-[80%] h-full flex flex-col gap-6 items-center justify-center">
+    <div className="flex sm:flex-row flex-col login-box-shadow rounded-lg font-sans mt-10 w-full sm:w-auto">
+      <div className="sm:w-[30vw] w-full sm:h-[50vh] h-auto flex flex-col items-center justify-center gap-6 p-8">
+        <div className="sm:w-[80%] w-full h-full flex flex-col gap-6 items-center justify-center">
           <div className="flex flex-col gap-2 items-center">
             <h2 className="text-5xl font-semibold text-center text-gray-800">
               Welcome back.
@@ -129,12 +129,12 @@ function LoginCard({ onSuccess }) {
         </div>
       </div>
 
-      <div className="relative w-[25vw] h-[50vh]">
+      <div className="relative sm:w-[25vw] w-full h-[50vh]">
         <Image
           src="/img/Ferrari-login.png"
           alt="car image"
           fill
-          className="object-cover filter brightness-90 saturate-100 contrast-50 hover:contrast-100 transition duration-1000 rounded-r-lg"
+          className="object-cover filter brightness-90 saturate-100 contrast-50 hover:contrast-100 transition duration-1000 rounded-t-2xl sm:rounded-r-lg"
         />
       </div>
     </div>

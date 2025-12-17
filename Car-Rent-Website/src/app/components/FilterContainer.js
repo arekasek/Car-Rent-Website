@@ -12,15 +12,15 @@ const FilterSection = ({
 }) => (
   <div>
     <div
-      className="flex justify-between items-center cursor-pointer hover:text-gray-600 transition border-b border-gray-400/50 px-8 py-12"
+      className="flex justify-between items-center cursor-pointer hover:text-gray-600 transition border-b border-gray-400/50 px-8 sm:py-12 py-6"
       onClick={() => onToggle(title.toLowerCase().replace(" ", ""))}
     >
-      <h3 className="font-semibold text-black">{title}</h3>
+      <h3 className="font-normal text-black">{title}</h3>
       <span>{isExpanded ? <IoIosArrowUp /> : <IoIosArrowDown />}</span>
     </div>
 
     {isExpanded && (
-      <div className="flex flex-col gap-4 border-b border-gray-400/50 px-16 py-4">
+      <div className="flex flex-col gap-4 border-b border-gray-400/50 px-16 py-4 font-sans">
         {options.map((option) => (
           <label key={option} className="flex items-center gap-3">
             <Checkbox
@@ -89,27 +89,31 @@ function FilterContainer({ onFilterChange }) {
   };
 
   return (
-    <div className="text-black w-[18vw] overflow-y-auto border border-l-0 border-gray-400/50">
-      <input
-        type="text"
-        placeholder="Filter cars..."
-        className="w-full p-4 rounded-lg mb-6"
-        onChange={handleSearch}
-        value={searchTerm}
-      />
-
-      <div className="mt-6">
-        {Object.entries(filters).map(([type, options]) => (
-          <FilterSection
-            key={type}
-            title={type.charAt(0).toUpperCase() + type.slice(1)}
-            options={options}
-            selected={selected[type]}
-            onToggle={toggleSection}
-            onCheck={(option) => handleCheck(type, option)}
-            isExpanded={expandedSections[type]}
+    <div className="text-black md:w-[18vw] w-full border border-l-0 border-gray-400/50">
+      <div className="sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto overflow-y-auto">
+        <div className="p-6">
+          <input
+            type="text"
+            placeholder="Filter cars..."
+            className="w-full p-4 rounded-lg"
+            onChange={handleSearch}
+            value={searchTerm}
           />
-        ))}
+        </div>
+
+        <div className="mt-6">
+          {Object.entries(filters).map(([type, options]) => (
+            <FilterSection
+              key={type}
+              title={type.charAt(0).toUpperCase() + type.slice(1)}
+              options={options}
+              selected={selected[type]}
+              onToggle={toggleSection}
+              onCheck={(option) => handleCheck(type, option)}
+              isExpanded={expandedSections[type]}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

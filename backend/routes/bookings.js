@@ -81,6 +81,37 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+router.get("/car/:carId/booked-dates", async (req, res) => {
+  try {
+    const { carId } = req.params;
+
+    const { data: bookings, error } = await supabase
+      .from("bookings")
+      .select("start_date, end_date")
+      .eq("car_id", carId)
+      .eq("status", "confirmed");
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return res.status(400).json({ error: error.message });
+    }
+
+    const bookedDates = [];
+    bookings.forEach((booking) => {
+      const start = new Date(booking.start_date);
+      const end = new Date(booking.end_date);
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        bookedDates.push(d.toISOString().split("T")[0]);
+      }
+    });
+
+    return res.json({ bookedDates: [...new Set(bookedDates)] });
+  } catch (err) {
+    console.error("Error fetching booked dates:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.put("/:id/cancel", async (req, res) => {
   try {
     const { id } = req.params;
