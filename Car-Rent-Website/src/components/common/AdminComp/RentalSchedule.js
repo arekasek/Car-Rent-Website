@@ -35,7 +35,7 @@ export const RentalSchedule = ({ cars, bookings, formatDate }) => {
                 key={car.id}
                 className="bg-white rounded-lg shadow-lg overflow-hidden"
               >
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                <div className="bg-gray-500 px-6 py-4">
                   <h3 className="text-xl font-bold text-white">
                     {car.brand} {car.model}
                   </h3>
