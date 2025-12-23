@@ -120,7 +120,7 @@ export default function Navbar() {
             </button>
 
             {loading ? (
-              <Loader message="Loading..." />
+              <span>Loading...</span>
             ) : user ? (
               <>
                 {user.role === "admin" && (
