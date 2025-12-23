@@ -174,16 +174,20 @@ export default function DateRangeCalendar({
                   : ""
               }
               ${
-                day && !isBooked(day) && !isStartDate(day) && !isEndDate(day)
-                  ? "bg-gray-100 text-gray-900 hover:bg-blue-100 cursor-pointer"
-                  : ""
-              }
-              ${
                 isStartDate(day) || isEndDate(day)
                   ? "bg-blue-600 text-white shadow-lg"
                   : ""
               }
               ${isDateInRange(day) ? "bg-blue-200 text-blue-900" : ""}
+              ${
+                day &&
+                !isBooked(day) &&
+                !isStartDate(day) &&
+                !isEndDate(day) &&
+                !isDateInRange(day)
+                  ? "bg-gray-100 text-gray-900 hover:bg-blue-100 cursor-pointer"
+                  : ""
+              }
             `}
           >
             {day}

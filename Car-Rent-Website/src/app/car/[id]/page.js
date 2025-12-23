@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { fetchCars } from "@/lib/fetchCars";
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
-import DateRangeCalendar from "@/app/components/DateRangeCalendar";
+import DateRangeCalendar from "@/components/booking/DateRangeCalendar";
 import { Button } from "@nextui-org/button";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { LuCar } from "react-icons/lu";

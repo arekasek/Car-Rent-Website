@@ -44,7 +44,7 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { brand, model, color, imagefront, data } = req.body;
+    const { brand, model, color, imagefront, price, data } = req.body;
 
     if (!brand || !model || !data) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -52,7 +52,7 @@ router.post("/", async (req, res) => {
 
     const { data: insertedCar, error } = await supabase
       .from("cars")
-      .insert([{ brand, model, color, imagefront, data }])
+      .insert([{ brand, model, color, imagefront, price, data }])
       .select()
       .single();
 
@@ -71,11 +71,11 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { brand, model, color, imagefront, data } = req.body;
+    const { brand, model, color, imagefront, price, data } = req.body;
 
     const { data: updatedCar, error } = await supabase
       .from("cars")
-      .update({ brand, model, color, imagefront, data })
+      .update({ brand, model, color, imagefront, price, data })
       .eq("id", id)
       .select()
       .single();

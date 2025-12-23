@@ -1,6 +1,6 @@
 import React from "react";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-import { Checkbox } from "./ui/checkbox.jsx";
+import { Checkbox } from "@/components/ui/checkbox.jsx";
 
 const FilterSection = ({
   title,

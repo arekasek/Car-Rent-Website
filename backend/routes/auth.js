@@ -22,9 +22,34 @@ router.post("/signin", async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
+    let userData = {
+      ...data.user,
+      role: "user",
+    };
+
+    try {
+      const { data: userProfile, error: profileError } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profileError) {
+        console.warn(
+          "Could not fetch user role - users table may not exist or user not found:",
+          profileError.message
+        );
+      } else if (userProfile && userProfile.role) {
+        userData.role = userProfile.role;
+        console.log(`User logged in with role: ${userData.role}`);
+      }
+    } catch (err) {
+      console.warn("Error fetching user role:", err.message);
+    }
+
     return res.json({
       data: {
-        user: data.user,
+        user: userData,
         session: data.session,
       },
     });
@@ -51,6 +76,16 @@ router.post("/signup", async (req, res) => {
 
     if (error) {
       return res.status(400).json({ error: error.message });
+    }
+
+    if (data.user) {
+      await supabase.from("users").insert([
+        {
+          id: data.user.id,
+          email: data.user.email,
+          role: "user",
+        },
+      ]);
     }
 
     return res.json({

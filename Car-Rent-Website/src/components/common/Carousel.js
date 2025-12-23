@@ -5,8 +5,8 @@ import Image from "next/image";
 import gsap from "gsap";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import "./fonts/vibes-font.css";
-import "./fonts/thunder-font.css";
+import "@/styles/vibes-font.css";
+import "@/styles/thunder-font.css";
 import { ImCross } from "react-icons/im";
 import { Button } from "@nextui-org/button";
 import { Scrollbars } from "rc-scrollbars";
@@ -169,18 +169,20 @@ export default function Carousel() {
               <div className="w-full sm:w-4/5 h-[20vh]">
                 <Scrollbars className="w-full h-[20vh]">
                   <table className="w-full text-left font-sans md:text-lg text-sm">
-                    {selectedCar?.data &&
-                      Object.entries(selectedCar.data).map(([key, value]) => (
-                        <tr
-                          className=" border-b-gray-300  odd:bg-[#c0c2ce]"
-                          key={key}
-                        >
-                          <td className="text-left px-5 py-1 font-semibold">
-                            {key.charAt(0).toUpperCase() + key.slice(1)}:
-                          </td>{" "}
-                          <td className="text-right px-5 py-1">{value}</td>
-                        </tr>
-                      ))}
+                    <tbody>
+                      {selectedCar?.data &&
+                        Object.entries(selectedCar.data).map(([key, value]) => (
+                          <tr
+                            className=" border-b-gray-300  odd:bg-[#c0c2ce]"
+                            key={key}
+                          >
+                            <td className="text-left px-5 py-1 font-semibold">
+                              {key.charAt(0).toUpperCase() + key.slice(1)}:
+                            </td>
+                            <td className="text-right px-5 py-1">{value}</td>
+                          </tr>
+                        ))}
+                    </tbody>
                   </table>
                 </Scrollbars>
               </div>

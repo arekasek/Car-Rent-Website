@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Loader } from "@/components/common/Loader";
 
 import { MdOutlineMailLock } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
@@ -100,8 +101,16 @@ export default function SignupCard({ onSuccess }) {
             disabled={loading}
             className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 disabled:bg-gray-400 flex items-center justify-center gap-2 transition duration-300 group"
           >
-            {loading ? "Signing up..." : "Sign up"}
-            <FaArrowRightLong className="transition-transform duration-300 group-hover:translate-x-3" />
+            {loading ? (
+              <>
+                <Loader message="Signing up..." />
+              </>
+            ) : (
+              <>
+                Sign up
+                <FaArrowRightLong className="transition-transform duration-300 group-hover:translate-x-3" />
+              </>
+            )}
           </button>
 
           <p className="text-gray-500">

@@ -36,14 +36,11 @@ export function AuthProvider({ children }) {
     const loadUser = () => {
       try {
         const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
-        console.log("AuthContext: Loading user from storage:", savedUser);
         if (savedUser) {
           const parsedUser = JSON.parse(savedUser);
-          console.log("AuthContext: User loaded:", parsedUser);
           setUser(parsedUser);
           resetSessionTimer();
         } else {
-          console.log("AuthContext: No user found in storage");
           setUser(null);
         }
       } catch (error) {
@@ -57,12 +54,14 @@ export function AuthProvider({ children }) {
     loadUser();
 
     const handleStorageChange = () => {
-      console.log("AuthContext: Storage changed");
       loadUser();
     };
 
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -101,7 +100,7 @@ export function AuthProvider({ children }) {
         clearTimeout(sessionTimeout);
       }
     };
-  }, [user, sessionTimeout]);
+  }, [user]);
 
   const logout = async () => {
     localStorage.removeItem(AUTH_STORAGE_KEY);

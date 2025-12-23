@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { fetchCars } from "@/lib/fetchCars";
-import FilterContainer from "../components/FilterContainer";
-import SortingBar from "../components/SortingBar";
-import CarInfoCard from "../components/CarInfoCard";
+import FilterContainer from "@/components/car/FilterContainer";
+import SortingBar from "@/components/car/SortingBar";
+import CarInfoCard from "@/components/car/CarInfoCard";
 
 export default function Page() {
   const [cars, setCars] = useState([]);

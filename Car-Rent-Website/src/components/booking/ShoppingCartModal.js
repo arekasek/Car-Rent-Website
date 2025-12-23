@@ -93,7 +93,9 @@ export default function ShoppingCartModal({ isOpen, onClose }) {
                     <h3 className="font-bold">
                       {item.brand} {item.model}
                     </h3>
-                    <p className="text-gray-600 text-sm">${item.data?.price || 0}/day</p>
+                    <p className="text-gray-600 text-sm">
+                      ${item.data?.price || 0}/day
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -131,7 +133,9 @@ export default function ShoppingCartModal({ isOpen, onClose }) {
                   </div>
 
                   <div className="text-right w-20">
-                    <p className="font-bold">${(item.data?.price || 0) * item.rentalDays}</p>
+                    <p className="font-bold">
+                      ${(item.data?.price || 0) * item.rentalDays}
+                    </p>
                     <button
                       onClick={() => removeFromCart(item.cartId)}
                       className="text-red-500 hover:text-red-700 mt-2"

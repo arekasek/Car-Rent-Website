@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
+import { Loader } from "@/components/common/Loader";
 
 // ICONS
 import { MdOutlineMailLock } from "react-icons/md";
@@ -15,6 +17,13 @@ function LoginCard({ onSuccess }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      router.push("/");
+    }
+  }, [user, router]);
 
   const handleLogin = async () => {
     setLoading(true);
@@ -39,6 +48,8 @@ function LoginCard({ onSuccess }) {
       if (data.data?.user) {
         console.log("Saving user to localStorage:", data.data.user);
         localStorage.setItem("auth_user", JSON.stringify(data.data.user));
+        // Trigger storage event for other tabs
+        window.dispatchEvent(new Event("storage"));
       } else {
         console.warn("No user data in response:", data);
       }
@@ -116,8 +127,16 @@ function LoginCard({ onSuccess }) {
             disabled={loading}
             className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-400 flex items-center justify-center gap-2 transition duration-300 group"
           >
-            {loading ? "Logging in..." : "Login"}
-            <FaArrowRightLong className="transition-transform duration-300 group-hover:translate-x-3" />
+            {loading ? (
+              <>
+                <Loader message="Logging in..." />
+              </>
+            ) : (
+              <>
+                Login
+                <FaArrowRightLong className="transition-transform duration-300 group-hover:translate-x-3" />
+              </>
+            )}
           </button>
 
           <p className="text-gray-500">

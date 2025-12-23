@@ -1,9 +1,5 @@
-import Image from "next/image";
-import Navbar from "./Navbar";
-import Carousel from "./Carousel";
+import Carousel from "@/components/common/Carousel";
 import Sidebar from "./Sidebar";
-import { MdArrowDropDown } from "react-icons/md";
-import HamburgerMenu from "./Ham-menu";
 
 export default function Home() {
   return (

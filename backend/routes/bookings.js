@@ -2,6 +2,25 @@ const express = require("express");
 const supabase = require("../config/supabase");
 const router = express.Router();
 
+router.get("/", async (req, res) => {
+  try {
+    const { data: bookings, error } = await supabase
+      .from("bookings")
+      .select("*, cars(*)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return res.status(400).json({ error: error.message });
+    }
+
+    return res.json(bookings || []);
+  } catch (err) {
+    console.error("Error fetching all bookings:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.post("/", async (req, res) => {
   try {
     const { userId, carId, startDate, endDate, totalPrice } = req.body;

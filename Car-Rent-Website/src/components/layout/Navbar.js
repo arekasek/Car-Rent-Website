@@ -10,10 +10,11 @@ import { Turn as Hamburger } from "hamburger-react";
 import { PiShoppingCartThin } from "react-icons/pi";
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
-import ShoppingCartModal from "@/app/components/ShoppingCartModal";
+import ShoppingCartModal from "@/components/booking/ShoppingCartModal";
+import { Loader } from "@/components/common/Loader";
 import gsap from "gsap";
-import "./fonts/vibes-font.css";
-import "./fonts/thunder-font.css";
+import "@/styles/vibes-font.css";
+import "@/styles/thunder-font.css";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,7 +23,7 @@ export default function Navbar() {
   const router = useRouter();
   const isMainPage = pathname === "/";
   const { cartItems } = useCart();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     gsap.fromTo(
@@ -51,12 +52,12 @@ export default function Navbar() {
 
   useEffect(() => {
     if (isMenuOpen) {
-      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "unset";
+      document.documentElement.style.overflow = "";
     }
     return () => {
-      document.body.style.overflow = "unset";
+      document.documentElement.style.overflow = "";
     };
   }, [isMenuOpen]);
 
@@ -75,7 +76,7 @@ export default function Navbar() {
           isMainPage
             ? "fixed top-0 left-0 right-0 h-[10vh]"
             : "relative h-[10vh] "
-        } w-full flex justify-center items-center font-sans text-black font-light z-50 min-h-[60px]`}
+        } w-full flex justify-center items-center font-sans text-black font-light z-40 min-h-[60px]`}
       >
         <div className="w-full px-8 flex flex-row justify-between items-center">
           <div className="logo flex items-center">
@@ -105,53 +106,47 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="user flex items-center flex-row-reverse gap-6">
-            <div className="hidden sm:block">
-              <button
-                onClick={() => {
-                  if (!user) {
-                    router.push("/login");
-                  } else {
-                    setIsCartOpen(true);
-                  }
-                }}
-                className="relative text-3xl"
-                title={user ? "Shopping cart" : "Login to use cart"}
-              >
-                <PiShoppingCartThin id="animate-icon" />
-                {cartItems.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {cartItems.length}
-                  </span>
-                )}
-              </button>
-            </div>
-
-            <div className="hidden sm:block">
-              {user ? (
-                <button
-                  onClick={() => router.push("/profile")}
-                  className="text-3xl"
-                  id="animate-icon"
-                >
-                  <CiLogin />
-                </button>
-              ) : (
-                <Link href="/login">
-                  <CiLogin className="text-3xl" id="animate-icon"></CiLogin>
-                </Link>
+          <div
+            className="flex flex-row-reverse gap-8 justify-center items-center"
+            id="animate-icon"
+          >
+            <button onClick={() => setIsCartOpen(true)}>
+              <PiShoppingCartThin className="text-3xl relative" />
+              {cartItems?.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartItems.length}
+                </span>
               )}
-            </div>
+            </button>
 
-            <div className="block sm:hidden z-50" id="animate-icon">
-              <Hamburger
-                direction="left"
-                easing="ease-in"
-                color={isMenuOpen ? "white" : "black"}
-                size={35}
-                toggled={isMenuOpen}
-                toggle={toggleMenu}
-              />
+            {loading ? (
+              <Loader message="Loading..." />
+            ) : user ? (
+              <>
+                {user.role === "admin" && (
+                  <Link
+                    href="/admin"
+                    className="menu-link font-semibold text-blue-600"
+                  >
+                    Admin
+                  </Link>
+                )}
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("auth_user");
+                    router.push("/");
+                  }}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link href="/login">
+                <CiLogin className="text-3xl" />
+              </Link>
+            )}
+            <div className="sm:hidden block">
+              <Hamburger toggled={isMenuOpen} toggle={toggleMenu} />
             </div>
           </div>
         </div>
