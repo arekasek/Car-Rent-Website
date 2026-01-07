@@ -50,7 +50,6 @@ export default function CarDetailPage() {
         const foundCar = allCars.find((c) => c.id === parseInt(params.id));
         setCar(foundCar);
 
-        // Fetch booked dates for this car
         if (foundCar) {
           const backendUrl =
             process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
@@ -97,14 +96,32 @@ export default function CarDetailPage() {
   }
 
   const getPrice = (car) => {
-    return car.price || "N/A";
+    if (!car) return "N/A";
+    if (car.currentPrice !== undefined && car.currentPrice !== null) {
+      return car.currentPrice;
+    }
+    if (car.price !== undefined && car.price !== null) {
+      return car.price;
+    }
+    return "N/A";
+  };
+
+  const hasBookingConflict = () => {
+    if (!startDate || !endDate) return false;
+
+    const selectedStart = new Date(startDate);
+    const selectedEnd = new Date(endDate);
+
+    return bookedDates.some((bookedDateStr) => {
+      const bookedDate = new Date(bookedDateStr);
+      return bookedDate >= selectedStart && bookedDate <= selectedEnd;
+    });
   };
 
   const handleDateRangeChange = ({ startDate, endDate }) => {
     setStartDate(startDate);
     setEndDate(endDate);
 
-    // Calculate total cost
     if (startDate && endDate) {
       const diffTime = Math.abs(endDate - startDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -232,6 +249,11 @@ export default function CarDetailPage() {
                 <p className="text-5xl font-bold text-gray-900">
                   ${getPrice(car)}
                 </p>
+                {car.basePrice && car.basePrice !== car.currentPrice && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Base price: ${car.basePrice}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-3 mb-6 pb-6 border-b">
@@ -261,23 +283,39 @@ export default function CarDetailPage() {
                 </div>
               </div>
 
+              {startDate && endDate && hasBookingConflict() && (
+                <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+                  ⚠️ This car is already booked for some of the selected dates.
+                  Please choose different dates.
+                </div>
+              )}
+
               <Button
                 onClick={() => {
                   if (!user) {
                     router.push("/login");
                   } else {
-                    addToCart(car);
+                    let rentalDays = 1;
+                    if (startDate && endDate) {
+                      const diffTime = Math.abs(endDate - startDate);
+                      rentalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    }
+                    addToCart(car, rentalDays);
                     alert("Added to cart!");
                   }
                 }}
                 className={`w-full py-3 rounded-lg font-semibold text-lg transition ${
-                  user
+                  user && !hasBookingConflict()
                     ? "bg-blue-600 text-white hover:bg-blue-700"
                     : "bg-gray-400 text-white cursor-not-allowed"
                 }`}
-                disabled={!user}
+                disabled={!user || hasBookingConflict()}
               >
-                {user ? "Add to Cart" : "Login to Rent"}
+                {hasBookingConflict()
+                  ? "Dates Not Available"
+                  : user
+                  ? "Add to Cart"
+                  : "Login to Rent"}
               </Button>
 
               <button

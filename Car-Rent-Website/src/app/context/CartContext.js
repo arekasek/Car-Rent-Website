@@ -65,7 +65,8 @@ export function CartProvider({ children }) {
 
   const getTotalPrice = () => {
     return cartItems.reduce((total, item) => {
-      const price = item.data?.price || 0;
+      // Use dynamic price (currentPrice) if available, otherwise use static price
+      const price = item.currentPrice || item.data?.price || 0;
       return total + price * item.rentalDays;
     }, 0);
   };

@@ -1,5 +1,6 @@
 const express = require("express");
 const supabase = require("../config/supabase");
+const { getDynamicPrice } = require("../utils/dynamicPricing");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -14,7 +15,24 @@ router.get("/", async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    return res.json(data || []);
+    const carsWithDynamicPricing = await Promise.all(
+      (data || []).map(async (car) => {
+        const pricing = await getDynamicPrice(car.price, car.id);
+        return {
+          ...car,
+          basePrice: pricing.basePrice,
+          currentPrice: pricing.dynamicPrice,
+          priceMultiplier: pricing.multiplier,
+          bookedDays: pricing.bookedDays,
+          availableDays: pricing.availableDays,
+          totalDays: pricing.totalDays,
+          occupancyPercentage: pricing.occupancyPercentage,
+          demandLevel: pricing.demandLevel,
+        };
+      })
+    );
+
+    return res.json(carsWithDynamicPricing);
   } catch (err) {
     console.error("Error fetching cars:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -35,7 +53,21 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ error: "Car not found" });
     }
 
-    return res.json(data);
+    // Add dynamic pricing
+    const pricing = await getDynamicPrice(data.price, data.id);
+    const carWithPricing = {
+      ...data,
+      basePrice: pricing.basePrice,
+      currentPrice: pricing.dynamicPrice,
+      priceMultiplier: pricing.multiplier,
+      bookedDays: pricing.bookedDays,
+      availableDays: pricing.availableDays,
+      totalDays: pricing.totalDays,
+      occupancyPercentage: pricing.occupancyPercentage,
+      demandLevel: pricing.demandLevel,
+    };
+
+    return res.json(carWithPricing);
   } catch (err) {
     console.error("Error fetching car:", err);
     return res.status(500).json({ error: "Internal server error" });

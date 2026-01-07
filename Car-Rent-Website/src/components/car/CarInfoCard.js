@@ -100,6 +100,7 @@ function CarInfoCard({
   const getPrice = (car) => {
     if (!car) return 0;
     const pCandidates = [
+      car.currentPrice,
       car.data?.price,
       car.data?.pricePerDay,
       car.price,

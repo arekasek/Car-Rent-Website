@@ -48,13 +48,12 @@ function LoginCard({ onSuccess }) {
       if (data.data?.user) {
         console.log("Saving user to localStorage:", data.data.user);
         localStorage.setItem("auth_user", JSON.stringify(data.data.user));
-        // Trigger storage event for other tabs
         window.dispatchEvent(new Event("storage"));
       } else {
         console.warn("No user data in response:", data);
       }
 
-      alert("Zalogowano!");
+      alert("Logged in successfully!");
       if (typeof onSuccess === "function") onSuccess(data);
 
       setTimeout(() => {
@@ -129,7 +128,7 @@ function LoginCard({ onSuccess }) {
           >
             {loading ? (
               <>
-                <Loader message="Logging in..." />
+                <span>Loading...</span>
               </>
             ) : (
               <>

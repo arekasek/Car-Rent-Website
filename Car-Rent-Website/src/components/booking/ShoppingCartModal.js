@@ -94,47 +94,20 @@ export default function ShoppingCartModal({ isOpen, onClose }) {
                       {item.brand} {item.model}
                     </h3>
                     <p className="text-gray-600 text-sm">
-                      ${item.data?.price || 0}/day
+                      ${item.currentPrice || item.data?.price || 0}/day
                     </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        updateQuantity(
-                          item.cartId,
-                          Math.max(1, item.rentalDays - 1)
-                        )
-                      }
-                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      value={item.rentalDays}
-                      onChange={(e) =>
-                        updateQuantity(
-                          item.cartId,
-                          Math.max(1, parseInt(e.target.value) || 1)
-                        )
-                      }
-                      className="w-12 text-center border rounded"
-                      min="1"
-                    />
-                    <button
-                      onClick={() =>
-                        updateQuantity(item.cartId, item.rentalDays + 1)
-                      }
-                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                    >
-                      +
-                    </button>
+                    <p className="text-gray-600 text-xs mt-1">
+                      {item.rentalDays} days
+                    </p>
                   </div>
 
                   <div className="text-right w-20">
                     <p className="font-bold">
-                      ${(item.data?.price || 0) * item.rentalDays}
+                      $
+                      {(
+                        (item.currentPrice || item.data?.price || 0) *
+                        item.rentalDays
+                      ).toFixed(2)}
                     </p>
                     <button
                       onClick={() => removeFromCart(item.cartId)}
@@ -153,7 +126,9 @@ export default function ShoppingCartModal({ isOpen, onClose }) {
           <div className="border-t p-6 bg-gray-50">
             <div className="flex justify-between items-center mb-4">
               <span className="text-lg font-bold">Total:</span>
-              <span className="text-2xl font-bold">${getTotalPrice()}</span>
+              <span className="text-2xl font-bold">
+                ${getTotalPrice().toFixed(2)}
+              </span>
             </div>
             <button className="w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600 transition">
               Proceed to Checkout

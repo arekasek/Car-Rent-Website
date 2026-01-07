@@ -13,7 +13,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={exo.className}>
+      <body
+        className={`${exo.className} overflow-x-hidden`}
+        suppressHydrationWarning
+      >
         <Providers>
           <Navbar />
           {children}

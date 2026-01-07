@@ -11,6 +11,7 @@ import { ImCross } from "react-icons/im";
 import { Button } from "@nextui-org/button";
 import { Scrollbars } from "rc-scrollbars";
 import { fetchCars } from "@/lib/fetchCars";
+import Link from "next/link";
 
 export default function Carousel() {
   const [cars, setCars] = useState([]);
@@ -187,12 +188,13 @@ export default function Carousel() {
                 </Scrollbars>
               </div>
               <div className="w-full flex justify-center items-center">
-                <Button
-                  className="w-2/5 p-8 font-sans shadow-button text-xl text-white"
+                <Link
+                  className="w-2/5 p-8 font-sans shadow-button text-xl text-white text-center"
                   style={{ backgroundColor: selectedCar.color }}
+                  href={`/offer`}
                 >
                   Rent
-                </Button>
+                </Link>
               </div>
             </div>
           </div>
