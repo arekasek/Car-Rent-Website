@@ -159,4 +159,99 @@ router.get("/me", verifyAuth, async (req, res) => {
   }
 });
 
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(422).json({
+        error: "Validation failed",
+        details: { email: "Email is required" },
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(422).json({
+        error: "Validation failed",
+        details: { email: "Invalid email format" },
+      });
+    }
+
+    const { data: authUser, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .single();
+
+    if (userError || !authUser) {
+      return res.json({
+        message:
+          "If an account with this email exists, a password reset link has been sent.",
+      });
+    }
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${
+        process.env.FRONTEND_URL || "http://localhost:3000"
+      }/reset-password`,
+    });
+
+    if (error) {
+      console.error("Password reset error:", error);
+      return res.status(500).json({
+        error: "Failed to send reset email. Please try again.",
+      });
+    }
+
+    return res.json({
+      message:
+        "If an account with this email exists, a password reset link has been sent.",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(422).json({
+        error: "Validation failed",
+        details: {
+          token: !token ? "Reset token is required" : undefined,
+          password: !password ? "Password is required" : undefined,
+        },
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(422).json({
+        error: "Validation failed",
+        details: { password: "Password must be at least 6 characters" },
+      });
+    }
+
+    const { data: userData, error: updateError } =
+      await supabase.auth.updateUser({ password: password }, { jwt: token });
+
+    if (updateError) {
+      console.error("Password update error:", updateError);
+      return res.status(400).json({
+        error: "Failed to reset password. The link may be expired or invalid.",
+      });
+    }
+
+    return res.json({
+      message: "Password has been reset successfully.",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 module.exports = router;

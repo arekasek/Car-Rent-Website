@@ -14,7 +14,7 @@ import { RiLockPasswordLine } from "react-icons/ri";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { MdError } from "react-icons/md";
 
-function LoginCard({ onSuccess }) {
+function LoginCard({ onSuccess, onForgotPassword }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -185,9 +185,13 @@ function LoginCard({ onSuccess }) {
               Remember me
             </label>
 
-            <a href="#" className="float-right text-blue-500 hover:underline">
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              className="float-right text-blue-500 hover:underline bg-transparent border-0 cursor-pointer"
+            >
               Forgot password?
-            </a>
+            </button>
           </div>
 
           <button
