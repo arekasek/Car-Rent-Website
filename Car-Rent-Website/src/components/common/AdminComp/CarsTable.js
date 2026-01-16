@@ -3,6 +3,8 @@
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 
 export const CarsTable = ({ cars, onEdit, onDelete }) => {
+  const carsList = Array.isArray(cars) ? cars : [];
+
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-x-auto">
       <table className="w-full">
@@ -32,7 +34,7 @@ export const CarsTable = ({ cars, onEdit, onDelete }) => {
           </tr>
         </thead>
         <tbody>
-          {cars.map((car) => (
+          {carsList.map((car) => (
             <tr
               key={car.id}
               className="border-t border-gray-200 hover:bg-gray-50"
@@ -50,13 +52,13 @@ export const CarsTable = ({ cars, onEdit, onDelete }) => {
               <td className="px-6 py-4 flex gap-3">
                 <button
                   onClick={() => onEdit(car)}
-                  className="flex items-center gap-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+                  className="flex items-center gap-1 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition"
                 >
                   <FiEdit /> Edit
                 </button>
                 <button
                   onClick={() => onDelete(car.id)}
-                  className="flex items-center gap-1 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+                  className="flex items-center gap-1 bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
                 >
                   <FiTrash2 /> Delete
                 </button>

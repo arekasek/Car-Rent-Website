@@ -1,5 +1,6 @@
 const express = require("express");
 const supabase = require("../config/supabase");
+const { verifyAuth } = require("../middleware/verifyAuth");
 
 const router = express.Router();
 
@@ -8,8 +9,12 @@ router.post("/signin", async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        error: "Email and password are required",
+      return res.status(422).json({
+        error: "Validation failed",
+        details: {
+          email: !email ? "Email is required" : undefined,
+          password: !password ? "Password is required" : undefined,
+        },
       });
     }
 
@@ -19,8 +24,14 @@ router.post("/signin", async (req, res) => {
     });
 
     if (error) {
-      return res.status(400).json({ error: error.message });
+      if (error.message.includes("Invalid login credentials")) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+      return res.status(500).json({ error: "Authentication failed" });
     }
+
+    console.log("Supabase signin response - data.session:", data.session);
+    console.log("Supabase session keys:", Object.keys(data.session || {}));
 
     let userData = {
       ...data.user,
@@ -35,13 +46,9 @@ router.post("/signin", async (req, res) => {
         .single();
 
       if (profileError) {
-        console.warn(
-          "Could not fetch user role - users table may not exist or user not found:",
-          profileError.message
-        );
+        console.warn("Could not fetch user role:", profileError.message);
       } else if (userProfile && userProfile.role) {
         userData.role = userProfile.role;
-        console.log(`User logged in with role: ${userData.role}`);
       }
     } catch (err) {
       console.warn("Error fetching user role:", err.message);
@@ -55,7 +62,7 @@ router.post("/signin", async (req, res) => {
     });
   } catch (error) {
     console.error("Sign in error:", error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -64,8 +71,27 @@ router.post("/signup", async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        error: "Email and password are required",
+      return res.status(422).json({
+        error: "Validation failed",
+        details: {
+          email: !email ? "Email is required" : undefined,
+          password: !password ? "Password is required" : undefined,
+        },
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(422).json({
+        error: "Validation failed",
+        details: { email: "Invalid email format" },
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(422).json({
+        error: "Validation failed",
+        details: { password: "Password must be at least 6 characters" },
       });
     }
 
@@ -75,20 +101,27 @@ router.post("/signup", async (req, res) => {
     });
 
     if (error) {
-      return res.status(400).json({ error: error.message });
+      if (error.message.includes("already registered")) {
+        return res.status(409).json({ error: "Email already registered" });
+      }
+      return res.status(500).json({ error: "Signup failed" });
     }
 
     if (data.user) {
-      await supabase.from("users").insert([
-        {
-          id: data.user.id,
-          email: data.user.email,
-          role: "user",
-        },
-      ]);
+      try {
+        await supabase.from("users").insert([
+          {
+            id: data.user.id,
+            email: data.user.email,
+            role: "user",
+          },
+        ]);
+      } catch (err) {
+        console.error("Error creating user profile:", err);
+      }
     }
 
-    return res.json({
+    return res.status(201).json({
       data: {
         user: data.user,
         session: data.session,
@@ -96,32 +129,33 @@ router.post("/signup", async (req, res) => {
     });
   } catch (error) {
     console.error("Sign up error:", error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.get("/me", async (req, res) => {
+router.get("/me", verifyAuth, async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ error: "No authorization token" });
+    // User is already verified by middleware
+    const { data: userProfile, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", req.user.id)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      console.error("Error fetching user profile:", error);
+      return res.status(500).json({ error: "Failed to fetch profile" });
     }
 
-    const token = authHeader.replace("Bearer ", "");
-
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
-      return res.status(401).json({ error: "Invalid token" });
-    }
-
-    return res.json({ user });
+    return res.json({
+      user: {
+        ...req.user,
+        ...userProfile,
+      },
+    });
   } catch (error) {
     console.error("Get user error:", error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 

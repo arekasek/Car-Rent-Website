@@ -15,7 +15,9 @@ export async function fetchCars() {
 
     const data = await res.json();
     console.log("Fetched cars:", data);
-    return data;
+
+    const cars = Array.isArray(data) ? data : data.data || [];
+    return cars;
   } catch (error) {
     console.error("Error in fetchCars():", error);
     return [];

@@ -4,10 +4,12 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 const AUTH_STORAGE_KEY = "auth_user";
+const SESSION_STORAGE_KEY = "auth_session";
 const SESSION_TIMEOUT = 30 * 60 * 1000;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sessionTimeout, setSessionTimeout] = useState(null);
 
@@ -28,7 +30,9 @@ export function AuthProvider({ children }) {
 
   const logoutDueToTimeout = async () => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
+    localStorage.removeItem(SESSION_STORAGE_KEY);
     setUser(null);
+    setSession(null);
     alert("Your session has expired. Please login again.");
   };
 
@@ -36,16 +40,23 @@ export function AuthProvider({ children }) {
     const loadUser = () => {
       try {
         const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+        const savedSession = localStorage.getItem(SESSION_STORAGE_KEY);
         if (savedUser) {
           const parsedUser = JSON.parse(savedUser);
           setUser(parsedUser);
+          if (savedSession) {
+            const parsedSession = JSON.parse(savedSession);
+            setSession(parsedSession);
+          }
           resetSessionTimer();
         } else {
           setUser(null);
+          setSession(null);
         }
       } catch (error) {
         console.error("Auth check error:", error);
         setUser(null);
+        setSession(null);
       } finally {
         setLoading(false);
       }
@@ -104,7 +115,9 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
+    localStorage.removeItem(SESSION_STORAGE_KEY);
     setUser(null);
+    setSession(null);
     if (sessionTimeout) {
       clearTimeout(sessionTimeout);
       setSessionTimeout(null);
@@ -112,7 +125,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider value={{ user, session, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );

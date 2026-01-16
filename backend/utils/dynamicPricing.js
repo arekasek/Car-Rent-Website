@@ -1,4 +1,5 @@
 const supabase = require("../config/supabase");
+const cache = require("./cache");
 
 async function getDynamicPrice(
   basePrice,
@@ -7,6 +8,13 @@ async function getDynamicPrice(
   endDate = null
 ) {
   try {
+    // Check cache first
+    const cacheKey = `price:${carId}:${startDate || "all"}:${endDate || "all"}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const { data: bookings, error } = await supabase
       .from("bookings")
       .select("start_date, end_date")
@@ -150,7 +158,7 @@ async function getDynamicPrice(
 
     const dynamicPrice = Math.round(basePrice * multiplier * 100) / 100;
 
-    return {
+    const result = {
       basePrice,
       dynamicPrice,
       multiplier,
@@ -160,6 +168,10 @@ async function getDynamicPrice(
       occupancyPercentage: Math.round(occupancyPercentage * 100) / 100,
       demandLevel,
     };
+
+    cache.set(cacheKey, result, 300000);
+
+    return result;
   } catch (error) {
     console.error("Error calculating dynamic price:", error);
     return {

@@ -6,16 +6,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { Loader } from "@/components/common/Loader";
+import { validateAuthForm, validateField } from "@/lib/validators";
 
 // ICONS
 import { MdOutlineMailLock } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
 import { FaArrowRightLong } from "react-icons/fa6";
+import { MdError } from "react-icons/md";
 
 function LoginCard({ onSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [error, setError] = useState(null);
   const router = useRouter();
   const { user } = useAuth();
 
@@ -26,7 +30,17 @@ function LoginCard({ onSuccess }) {
   }, [user, router]);
 
   const handleLogin = async () => {
+    const validation = validateAuthForm({ email, password });
+    if (!validation.valid) {
+      setFieldErrors(validation.errors);
+      setError("Please fix the errors in the form");
+      return;
+    }
+
     setLoading(true);
+    setError(null);
+    setFieldErrors({});
+
     try {
       const backendUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
@@ -39,21 +53,23 @@ function LoginCard({ onSuccess }) {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || "Login failed");
+        setError(data.error || "Login failed");
         setLoading(false);
         return;
       }
 
       console.log("Login response data:", data);
-      if (data.data?.user) {
+      if (data.data?.user && data.data?.session) {
         console.log("Saving user to localStorage:", data.data.user);
+        console.log("Saving session to localStorage:", data.data.session);
         localStorage.setItem("auth_user", JSON.stringify(data.data.user));
+        localStorage.setItem("auth_session", JSON.stringify(data.data.session));
         window.dispatchEvent(new Event("storage"));
       } else {
-        console.warn("No user data in response:", data);
+        console.warn("No user or session data in response:", data);
       }
 
-      alert("Logged in successfully!");
+      setError(null);
       if (typeof onSuccess === "function") onSuccess(data);
 
       setTimeout(() => {
@@ -61,7 +77,7 @@ function LoginCard({ onSuccess }) {
       }, 500);
     } catch (err) {
       console.error(err);
-      alert("Login error");
+      setError("Login error: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -80,6 +96,13 @@ function LoginCard({ onSuccess }) {
             </p>
           </div>
 
+          {error && (
+            <div className="w-full bg-red-50 border border-red-300 text-red-700 px-3 py-2 rounded-md flex items-center gap-2 text-sm">
+              <MdError className="flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
           <div className="relative w-full">
             <MdOutlineMailLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
             <label htmlFor="email" className="sr-only">
@@ -90,10 +113,33 @@ function LoginCard({ onSuccess }) {
               id="email"
               placeholder="Email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-slate-200/10"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (fieldErrors.email) {
+                  const validation = validateField("email", e.target.value);
+                  if (validation.valid) {
+                    setFieldErrors((prev) => {
+                      const { email, ...rest } = prev;
+                      return rest;
+                    });
+                  }
+                }
+              }}
+              className={`w-full pl-10 pr-3 py-2 border rounded-md transition ${
+                fieldErrors.email
+                  ? "border-red-500 bg-red-50"
+                  : "border-gray-300 bg-slate-200/10"
+              }`}
             />
+            {fieldErrors.email && (
+              <MdError className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500" />
+            )}
           </div>
+          {fieldErrors.email && (
+            <p className="text-sm text-red-600 w-full text-left">
+              {fieldErrors.email}
+            </p>
+          )}
 
           <div className="relative w-full">
             <RiLockPasswordLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -105,10 +151,33 @@ function LoginCard({ onSuccess }) {
               id="password"
               placeholder="Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-slate-200/10"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (fieldErrors.password) {
+                  const validation = validateField("password", e.target.value);
+                  if (validation.valid) {
+                    setFieldErrors((prev) => {
+                      const { password, ...rest } = prev;
+                      return rest;
+                    });
+                  }
+                }
+              }}
+              className={`w-full p-2 pl-10 pr-3 py-2 border rounded-md transition ${
+                fieldErrors.password
+                  ? "border-red-500 bg-red-50"
+                  : "border-gray-300 bg-slate-200/10"
+              }`}
             />
+            {fieldErrors.password && (
+              <MdError className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500" />
+            )}
           </div>
+          {fieldErrors.password && (
+            <p className="text-sm text-red-600 w-full text-left">
+              {fieldErrors.password}
+            </p>
+          )}
 
           <div className="w-full">
             <input type="checkbox" id="remember" className="mr-2" />
@@ -124,7 +193,7 @@ function LoginCard({ onSuccess }) {
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-400 flex items-center justify-center gap-2 transition duration-300 group"
+            className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 disabled:bg-gray-400 flex items-center justify-center gap-2 transition duration-300 group"
           >
             {loading ? (
               <>

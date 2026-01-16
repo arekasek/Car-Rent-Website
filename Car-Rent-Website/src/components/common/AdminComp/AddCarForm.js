@@ -61,7 +61,7 @@ export const AddCarForm = ({
             setShowForm(!showForm);
             onReset();
           }}
-          className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+          className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition"
         >
           <FiPlus /> Add New Car
         </button>

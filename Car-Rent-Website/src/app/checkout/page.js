@@ -6,13 +6,22 @@ import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
 import { Button } from "@nextui-org/button";
 import { FaArrowLeft } from "react-icons/fa";
+import FormInput from "@/components/ui/FormInput";
+import {
+  validateCheckoutForm,
+  validateField,
+  formatCardNumber,
+  formatExpiry,
+  formatPhone,
+} from "@/lib/validators";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [formData, setFormData] = useState({
     email: user?.email || "",
     fullName: user?.fullName || "",
@@ -23,6 +32,25 @@ export default function CheckoutPage() {
     cardCVC: "",
   });
 
+  if (cartItems.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 pt-[10vh]">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Cart is Empty</h1>
+          <p className="text-gray-600 mb-6">
+            Please add items to your cart before checking out
+          </p>
+          <Button
+            onClick={() => router.push("/offer")}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+          >
+            Browse Cars
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 pt-[10vh]">
@@ -30,6 +58,28 @@ export default function CheckoutPage() {
           <h1 className="text-3xl font-bold mb-4">Login Required</h1>
           <p className="text-gray-600 mb-6">
             Please log in to proceed with checkout
+          </p>
+          <Button
+            onClick={() => router.push("/login")}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+          >
+            Go to Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session || !session.access_token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 pt-[10vh]">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Session Error</h1>
+          <p className="text-gray-600 mb-2">
+            Your session is invalid or expired. Please log in again.
+          </p>
+          <p className="text-gray-500 text-sm mb-6">
+            Debug: Session = {JSON.stringify(session)}
           </p>
           <Button
             onClick={() => router.push("/login")}
@@ -51,17 +101,54 @@ export default function CheckoutPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    let formattedValue = value;
+
+    if (name === "cardNumber") {
+      formattedValue = formatCardNumber(value);
+    } else if (name === "cardExpiry") {
+      formattedValue = formatExpiry(value);
+    } else if (name === "phone") {
+      formattedValue = formatPhone(value);
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: formattedValue,
     }));
+
+    const validation = validateField(name, formattedValue);
+    setFieldErrors((prev) => {
+      if (validation.valid) {
+        const { [name]: _, ...rest } = prev;
+        return rest;
+      } else {
+        return {
+          ...prev,
+          [name]: validation.error,
+        };
+      }
+    });
   };
 
   const handlePayment = async (e) => {
     e.preventDefault();
     if (loading) return;
+
+    console.log("=== PAYMENT HANDLER START ===");
+    console.log("Current session from context:", session);
+    console.log("Current user from context:", user);
+    console.log("Session access_token exists:", !!session?.access_token);
+
+    const validation = validateCheckoutForm(formData);
+    if (!validation.valid) {
+      setFieldErrors(validation.errors);
+      setError("Please fix the errors in the form");
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    setFieldErrors({});
 
     try {
       const backendUrl =
@@ -74,7 +161,6 @@ export default function CheckoutPage() {
         const totalPrice = price * item.rentalDays;
 
         const bookingData = {
-          userId: user.id,
           carId: item.id,
           startDate: startDate.toISOString().split("T")[0],
           endDate: endDate.toISOString().split("T")[0],
@@ -86,6 +172,7 @@ export default function CheckoutPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify(bookingData),
         });
@@ -123,18 +210,24 @@ export default function CheckoutPage() {
         const price = item.currentPrice || item.price || 0;
         const bookingTotal = price * item.rentalDays;
 
+        const paymentData = {
+          userId: user.id,
+          bookingId: bookingId,
+          amount: bookingTotal,
+          paymentMethod: "card",
+          stripeId: `stripe_${Date.now()}_${bookingId}`,
+        };
+
+        console.log("Creating payment with token:", session.access_token);
+        console.log("Payment data:", paymentData);
+
         return fetch(`${backendUrl}/api/payments`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({
-            userId: user.id,
-            bookingId: bookingId,
-            amount: bookingTotal,
-            paymentMethod: "credit_card",
-            stripeId: `stripe_${Date.now()}_${bookingId}`,
-          }),
+          body: JSON.stringify(paymentData),
         });
       });
 
@@ -207,9 +300,20 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg p-6 shadow-md mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Order Summary
-              </h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Order Summary
+                </h2>
+                <Button
+                  onClick={() => {
+                    clearCart();
+                    router.push("/offer");
+                  }}
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                >
+                  Clear Cart
+                </Button>
+              </div>
 
               <div className="space-y-6">
                 {cartItems.map((item, index) => (
@@ -253,118 +357,131 @@ export default function CheckoutPage() {
 
               <form onSubmit={handlePayment}>
                 {error && (
-                  <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-4">
-                    {error}
+                  <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-start gap-3">
+                    <span className="text-lg">⚠️</span>
+                    <div>
+                      <p className="font-semibold">Validation Error</p>
+                      <p>{error}</p>
+                      {error.includes("Start date cannot be in the past") && (
+                        <div className="mt-3 bg-red-100 p-3 rounded border border-red-300">
+                          <p className="text-sm font-semibold mb-2">
+                            Your cart has items with past dates.
+                          </p>
+                          <p className="text-sm mb-3">
+                            You need to go back, clear your cart, and select new
+                            rental dates in the future.
+                          </p>
+                          <Button
+                            onClick={() => {
+                              clearCart();
+                              router.push("/offer");
+                            }}
+                            className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                          >
+                            Clear Cart & Browse Cars
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={formData.fullName}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                  <FormInput
+                    label="Full Name"
+                    name="fullName"
+                    type="text"
+                    placeholder="John Doe"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    error={fieldErrors.fullName}
+                    required
+                    autoComplete="name"
+                  />
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                  <FormInput
+                    label="Email"
+                    name="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    error={fieldErrors.email}
+                    required
+                    autoComplete="email"
+                  />
 
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Phone
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                  <FormInput
+                    label="Phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="123-456-789"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    error={fieldErrors.phone}
+                    required
+                    autoComplete="tel"
+                    className="md:col-span-2"
+                  />
 
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Cardholder Name
-                    </label>
-                    <input
-                      type="text"
-                      name="cardName"
-                      value={formData.cardName}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                  <FormInput
+                    label="Cardholder Name"
+                    name="cardName"
+                    type="text"
+                    placeholder="JOHN DOE"
+                    value={formData.cardName}
+                    onChange={handleInputChange}
+                    error={fieldErrors.cardName}
+                    required
+                    autoComplete="cc-name"
+                    className="md:col-span-2"
+                  />
 
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Card Number
-                    </label>
-                    <input
-                      type="text"
-                      name="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      value={formData.cardNumber}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                  <FormInput
+                    label="Card Number"
+                    name="cardNumber"
+                    type="text"
+                    placeholder="1234 5678 9012 3456"
+                    value={formData.cardNumber}
+                    onChange={handleInputChange}
+                    error={fieldErrors.cardNumber}
+                    required
+                    autoComplete="cc-number"
+                    maxLength="19"
+                    className="md:col-span-2"
+                  />
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Expiry Date
-                    </label>
-                    <input
-                      type="text"
-                      name="cardExpiry"
-                      placeholder="MM/YY"
-                      value={formData.cardExpiry}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                  <FormInput
+                    label="Expiry Date"
+                    name="cardExpiry"
+                    type="text"
+                    placeholder="MM/YY"
+                    value={formData.cardExpiry}
+                    onChange={handleInputChange}
+                    error={fieldErrors.cardExpiry}
+                    required
+                    autoComplete="cc-exp"
+                    maxLength="5"
+                  />
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      CVC
-                    </label>
-                    <input
-                      type="text"
-                      name="cardCVC"
-                      placeholder="123"
-                      value={formData.cardCVC}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                  <FormInput
+                    label="CVC"
+                    name="cardCVC"
+                    type="text"
+                    placeholder="123"
+                    value={formData.cardCVC}
+                    onChange={handleInputChange}
+                    error={fieldErrors.cardCVC}
+                    required
+                    autoComplete="cc-csc"
+                    maxLength="4"
+                  />
                 </div>
 
                 <Button
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400"
+                  disabled={loading || Object.keys(fieldErrors).length > 0}
+                  className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
                 >
                   {loading ? "Processing..." : "Complete Payment"}
                 </Button>

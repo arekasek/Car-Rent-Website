@@ -36,7 +36,7 @@ export default function ShoppingCartModal({ isOpen, onClose }) {
             Please log in to access your shopping cart and complete purchases.
           </p>
           <Link href="/login">
-            <button className="w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600 transition">
+            <button className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition">
               Go to Login
             </button>
           </Link>
@@ -137,7 +137,7 @@ export default function ShoppingCartModal({ isOpen, onClose }) {
                 onClose();
                 router.push("/checkout");
               }}
-              className="w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600 transition"
+              className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition"
             >
               Proceed to Checkout
             </button>

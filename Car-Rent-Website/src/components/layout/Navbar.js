@@ -23,7 +23,7 @@ export default function Navbar() {
   const router = useRouter();
   const isMainPage = pathname === "/";
   const { cartItems } = useCart();
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   useEffect(() => {
     gsap.fromTo(
@@ -110,7 +110,10 @@ export default function Navbar() {
             className="flex flex-row-reverse gap-8 justify-center items-center"
             id="animate-icon"
           >
-            <button onClick={() => setIsCartOpen(true)}>
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="hidden sm:block"
+            >
               <PiShoppingCartThin className="text-3xl relative" />
               {cartItems?.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -126,22 +129,23 @@ export default function Navbar() {
                 {user.role === "admin" && (
                   <Link
                     href="/admin"
-                    className="menu-link font-semibold text-blue-600"
+                    className="menu-link font-semibold text-red-600 hidden sm:block"
                   >
                     Admin
                   </Link>
                 )}
                 <button
-                  onClick={() => {
-                    localStorage.removeItem("auth_user");
+                  onClick={async () => {
+                    await logout();
                     router.push("/");
                   }}
+                  className="hidden sm:block"
                 >
                   Logout
                 </button>
               </>
             ) : (
-              <Link href="/login">
+              <Link href="/login" className="hidden sm:block">
                 <CiLogin className="text-3xl" />
               </Link>
             )}

@@ -1,18 +1,30 @@
 const express = require("express");
 const supabase = require("../config/supabase");
 const { getDynamicPrice } = require("../utils/dynamicPricing");
+const { verifyAuth, verifyAdmin } = require("../middleware/verifyAuth");
+const cache = require("../utils/cache");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { limit = 50, offset = 0 } = req.query;
+
+    const cacheKey = `cars:all:${limit}:${offset}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      res.set("X-Cache", "HIT");
+      return res.json(cached);
+    }
+
+    const { data, error, count } = await supabase
       .from("cars")
-      .select("*")
-      .order("id", { ascending: true });
+      .select("*", { count: "exact" })
+      .order("id", { ascending: true })
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
     if (error) {
       console.error("Supabase error:", error);
-      return res.status(400).json({ error: error.message });
+      return res.status(500).json({ error: "Failed to fetch cars" });
     }
 
     const carsWithDynamicPricing = await Promise.all(
@@ -32,7 +44,20 @@ router.get("/", async (req, res) => {
       })
     );
 
-    return res.json(carsWithDynamicPricing);
+    const result = {
+      data: carsWithDynamicPricing,
+      pagination: {
+        total: count,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        hasMore: parseInt(offset) + parseInt(limit) < count,
+      },
+    };
+
+    cache.set(cacheKey, result, 300000);
+    res.set("X-Cache", "MISS");
+
+    return res.json(result);
   } catch (err) {
     console.error("Error fetching cars:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -42,6 +67,14 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
+
+    const cacheKey = `car:${id}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      res.set("X-Cache", "HIT");
+      return res.json(cached);
+    }
+
     const { data, error } = await supabase
       .from("cars")
       .select("*")
@@ -49,11 +82,13 @@ router.get("/:id", async (req, res) => {
       .single();
 
     if (error) {
+      if (error.code === "PGRST116") {
+        return res.status(404).json({ error: "Car not found" });
+      }
       console.error("Supabase error:", error);
-      return res.status(404).json({ error: "Car not found" });
+      return res.status(500).json({ error: "Failed to fetch car" });
     }
 
-    // Add dynamic pricing
     const pricing = await getDynamicPrice(data.price, data.id);
     const carWithPricing = {
       ...data,
@@ -67,6 +102,9 @@ router.get("/:id", async (req, res) => {
       demandLevel: pricing.demandLevel,
     };
 
+    cache.set(cacheKey, carWithPricing, 300000);
+    res.set("X-Cache", "MISS");
+
     return res.json(carWithPricing);
   } catch (err) {
     console.error("Error fetching car:", err);
@@ -74,16 +112,19 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Get pricing for a specific date range
 router.get("/:id/pricing", async (req, res) => {
   try {
     const { id } = req.params;
     const { startDate, endDate } = req.query;
 
     if (!startDate || !endDate) {
-      return res
-        .status(400)
-        .json({ error: "startDate and endDate are required" });
+      return res.status(422).json({
+        error: "Validation failed",
+        details: {
+          startDate: !startDate ? "startDate is required" : undefined,
+          endDate: !endDate ? "endDate is required" : undefined,
+        },
+      });
     }
 
     const { data, error } = await supabase
@@ -93,11 +134,13 @@ router.get("/:id/pricing", async (req, res) => {
       .single();
 
     if (error) {
+      if (error.code === "PGRST116") {
+        return res.status(404).json({ error: "Car not found" });
+      }
       console.error("Supabase error:", error);
-      return res.status(404).json({ error: "Car not found" });
+      return res.status(500).json({ error: "Failed to fetch car" });
     }
 
-    // Calculate dynamic pricing for the specific date range
     const pricing = await getDynamicPrice(data.price, id, startDate, endDate);
 
     return res.json(pricing);
@@ -107,12 +150,26 @@ router.get("/:id/pricing", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", verifyAuth, verifyAdmin, async (req, res) => {
   try {
     const { brand, model, color, imagefront, price, data } = req.body;
 
-    if (!brand || !model || !data) {
-      return res.status(400).json({ error: "Missing required fields" });
+    if (!brand || !model || !price) {
+      return res.status(422).json({
+        error: "Validation failed",
+        details: {
+          brand: !brand ? "Brand is required" : undefined,
+          model: !model ? "Model is required" : undefined,
+          price: !price ? "Price is required" : undefined,
+        },
+      });
+    }
+
+    if (price <= 0) {
+      return res.status(422).json({
+        error: "Validation failed",
+        details: { price: "Price must be positive" },
+      });
     }
 
     const { data: insertedCar, error } = await supabase
@@ -123,8 +180,10 @@ router.post("/", async (req, res) => {
 
     if (error) {
       console.error("Supabase error:", error);
-      return res.status(400).json({ error: error.message });
+      return res.status(500).json({ error: "Failed to create car" });
     }
+
+    cache.clearPattern("cars:.*");
 
     return res.status(201).json(insertedCar);
   } catch (err) {
@@ -133,22 +192,50 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", verifyAuth, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { brand, model, color, imagefront, price, data } = req.body;
 
+    const { data: existing, error: existError } = await supabase
+      .from("cars")
+      .select("id")
+      .eq("id", id)
+      .single();
+
+    if (existError || !existing) {
+      return res.status(404).json({ error: "Car not found" });
+    }
+
+    if (price !== undefined && price <= 0) {
+      return res.status(422).json({
+        error: "Validation failed",
+        details: { price: "Price must be positive" },
+      });
+    }
+
+    const updateData = {};
+    if (brand !== undefined) updateData.brand = brand;
+    if (model !== undefined) updateData.model = model;
+    if (color !== undefined) updateData.color = color;
+    if (imagefront !== undefined) updateData.imagefront = imagefront;
+    if (price !== undefined) updateData.price = price;
+    if (data !== undefined) updateData.data = data;
+
     const { data: updatedCar, error } = await supabase
       .from("cars")
-      .update({ brand, model, color, imagefront, price, data })
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();
 
     if (error) {
       console.error("Supabase error:", error);
-      return res.status(400).json({ error: error.message });
+      return res.status(500).json({ error: "Failed to update car" });
     }
+
+    cache.clearPattern("cars:.*");
+    cache.delete(`car:${id}`);
 
     return res.json(updatedCar);
   } catch (err) {
@@ -157,18 +244,31 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verifyAuth, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
+
+    const { data: existing, error: existError } = await supabase
+      .from("cars")
+      .select("id")
+      .eq("id", id)
+      .single();
+
+    if (existError || !existing) {
+      return res.status(404).json({ error: "Car not found" });
+    }
 
     const { error } = await supabase.from("cars").delete().eq("id", id);
 
     if (error) {
       console.error("Supabase error:", error);
-      return res.status(400).json({ error: error.message });
+      return res.status(500).json({ error: "Failed to delete car" });
     }
 
-    return res.json({ message: "Car deleted successfully" });
+    cache.clearPattern("cars:.*");
+    cache.delete(`car:${id}`);
+
+    return res.status(204).send();
   } catch (err) {
     console.error("Error deleting car:", err);
     return res.status(500).json({ error: "Internal server error" });

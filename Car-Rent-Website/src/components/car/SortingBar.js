@@ -13,12 +13,12 @@ export default function SortingBar({ onSortChange, onColsChange }) {
 
   return (
     <div className="w-full border border-gray-400/50 border-x-0 h-[10vh] flex items-center justify-between">
-      <span className="mx-4 text-gray-700 text-3xl font-sans font-light">
+      <span className="mx-4 text-gray-700 text-3xl font-sans font-light sm:block hidden">
         Find your dream car!
       </span>
       <div className="flex flex-row-reverse items-center justify-center">
         <button
-          className="bg-white/90 p-2 rounded-lg mr-4"
+          className="bg-white/90 p-2 rounded-lg mr-4 sm:block hidden"
           onClick={() => onColsChange?.((prev) => (prev === 2 ? 1 : 2))}
         >
           <PiSquaresFourLight className="text-2xl" />

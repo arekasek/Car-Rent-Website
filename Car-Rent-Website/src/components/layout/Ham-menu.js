@@ -11,6 +11,7 @@ import { FaLinkedin } from "react-icons/fa";
 import { FaFacebook } from "react-icons/fa";
 import { FaInstagramSquare } from "react-icons/fa";
 import { BsPersonFillCheck } from "react-icons/bs";
+import { FaShoppingCart } from "react-icons/fa";
 
 export default function HamburgerMenu({ isOpen, closeMenu }) {
   return (
@@ -29,6 +30,12 @@ export default function HamburgerMenu({ isOpen, closeMenu }) {
                 <div className="flex flex-row items-center gap-4">
                   <BiSolidOffer />
                   <span>Offer</span>
+                </div>
+              </Link>
+              <Link href="/checkout" onClick={closeMenu}>
+                <div className="flex flex-row items-center gap-4">
+                  <FaShoppingCart />
+                  <span>Cart</span>
                 </div>
               </Link>
               <Link href="/menu" onClick={closeMenu}>

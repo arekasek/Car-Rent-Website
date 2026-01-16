@@ -448,7 +448,7 @@ export default function CarDetailPage() {
                 }}
                 className={`w-full py-3 rounded-lg font-semibold text-lg transition ${
                   user && startDate && endDate && !hasBookingConflict()
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    ? "bg-black text-white hover:bg-gray-800"
                     : "bg-gray-400 text-white cursor-not-allowed"
                 }`}
                 disabled={

@@ -38,6 +38,12 @@ export default function DateRangeCalendar({
       day
     );
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate < today) {
+      return;
+    }
+
     if (!startDate) {
       setStartDate(selectedDate);
     } else if (!endDate && selectedDate > startDate) {
@@ -86,6 +92,17 @@ export default function DateRangeCalendar({
       .toISOString()
       .split("T")[0];
     return bookedDates.includes(dateStr);
+  };
+
+  const isPastDate = (day) => {
+    const date = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day
+    );
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
   };
 
   const monthNames = [
@@ -163,11 +180,18 @@ export default function DateRangeCalendar({
         {days.map((day, index) => (
           <button
             key={index}
-            onClick={() => day && !isBooked(day) && handleDateClick(day)}
-            disabled={!day || isBooked(day)}
+            onClick={() =>
+              day && !isBooked(day) && !isPastDate(day) && handleDateClick(day)
+            }
+            disabled={!day || isBooked(day) || isPastDate(day)}
             className={`
               py-2 px-1 sm:px-2 text-sm font-bold rounded-lg transition
               ${!day ? "bg-transparent" : ""}
+              ${
+                day && isPastDate(day)
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-50"
+                  : ""
+              }
               ${
                 day && isBooked(day)
                   ? "bg-red-200 text-red-700 cursor-not-allowed opacity-50"
@@ -182,6 +206,7 @@ export default function DateRangeCalendar({
               ${
                 day &&
                 !isBooked(day) &&
+                !isPastDate(day) &&
                 !isStartDate(day) &&
                 !isEndDate(day) &&
                 !isDateInRange(day)
@@ -243,6 +268,10 @@ export default function DateRangeCalendar({
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-blue-200 rounded"></div>
             <span className="text-gray-600">In range</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-gray-300 rounded"></div>
+            <span className="text-gray-600">Past</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-red-200 rounded"></div>

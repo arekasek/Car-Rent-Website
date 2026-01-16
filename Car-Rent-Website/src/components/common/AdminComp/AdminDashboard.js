@@ -10,6 +10,7 @@ import {
   FiDollarSign,
 } from "react-icons/fi";
 import { FaCar } from "react-icons/fa6";
+import { useAuth } from "@/app/context/AuthContext";
 import { Loader } from "../Loader";
 import { StatsCard } from "./StatsCard";
 import { CarsTable } from "./CarsTable";
@@ -17,6 +18,7 @@ import { AddCarForm } from "./AddCarForm";
 import { RentalSchedule } from "./RentalSchedule";
 
 const AdminDashboard = () => {
+  const { session } = useAuth();
   const [cars, setCars] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,8 +51,10 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchCars();
-    fetchBookings();
-  }, []);
+    if (session?.access_token) {
+      fetchBookings();
+    }
+  }, [session?.access_token]);
 
   const fetchCars = async () => {
     try {
@@ -67,7 +71,8 @@ const AdminDashboard = () => {
       }
 
       const data = await response.json();
-      setCars(data);
+      const carsData = data.data || data;
+      setCars(Array.isArray(carsData) ? carsData : []);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching cars:", error);
@@ -81,8 +86,17 @@ const AdminDashboard = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch(`${backendUrl}/api/bookings`, {
         signal: controller.signal,
+        headers,
       });
       clearTimeout(timeoutId);
 
@@ -272,7 +286,7 @@ const AdminDashboard = () => {
             onClick={() => setActiveTab("cars")}
             className={`px-6 py-3 font-semibold transition ${
               activeTab === "cars"
-                ? "text-blue-600 border-b-2 border-blue-600"
+                ? "text-black border-b-2 border-black"
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
@@ -282,7 +296,7 @@ const AdminDashboard = () => {
             onClick={() => setActiveTab("rentals")}
             className={`px-6 py-3 font-semibold transition ${
               activeTab === "rentals"
-                ? "text-blue-600 border-b-2 border-blue-600"
+                ? "text-black border-b-2 border-black"
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
@@ -298,19 +312,19 @@ const AdminDashboard = () => {
                 icon={FaCar}
                 title="Amount of cars"
                 value={cars.length}
-                bgColor="bg-blue-500"
+                bgColor="bg-gray-400"
               />
               <StatsCard
                 icon={FiBook}
                 title="Amount of bookings"
                 value={bookings.length}
-                bgColor="bg-green-500"
+                bgColor="bg-gray-500"
               />
               <StatsCard
                 icon={FiDollarSign}
                 title="Total Revenue"
                 value={`$${getTotalRevenue().toFixed(2)}`}
-                bgColor="bg-purple-500"
+                bgColor="bg-gray-600"
               />
               <StatsCard
                 icon={FiTrendingUp}
@@ -322,7 +336,7 @@ const AdminDashboard = () => {
                       }`
                     : "N/A"
                 }
-                bgColor="bg-orange-500"
+                bgColor="bg-gray-700"
               />
             </div>
             <AddCarForm
@@ -347,7 +361,6 @@ const AdminDashboard = () => {
           </>
         )}
 
-        {/* Car Rentals Tab */}
         {activeTab === "rentals" && (
           <RentalSchedule
             cars={cars}

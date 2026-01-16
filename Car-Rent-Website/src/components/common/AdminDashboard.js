@@ -10,6 +10,7 @@ import {
   FiDollarSign,
 } from "react-icons/fi";
 import { FaCar } from "react-icons/fa6";
+import { useAuth } from "@/app/context/AuthContext";
 import { Loader } from "./Loader";
 import { StatsCard } from "./StatsCard";
 import { CarsTable } from "./CarsTable";
@@ -17,6 +18,7 @@ import { AddCarForm } from "./AdminComp/AddCarForm";
 import { RentalSchedule } from "./RentalSchedule";
 
 const AdminDashboard = () => {
+  const { session } = useAuth();
   const [cars, setCars] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,8 +51,10 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchCars();
-    fetchBookings();
-  }, []);
+    if (session?.access_token) {
+      fetchBookings();
+    }
+  }, [session?.access_token]);
 
   const fetchCars = async () => {
     try {
@@ -67,7 +71,9 @@ const AdminDashboard = () => {
       }
 
       const data = await response.json();
-      setCars(data);
+      // Handle both paginated response and array response
+      const carsData = data.data || data;
+      setCars(Array.isArray(carsData) ? carsData : []);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching cars:", error);
@@ -81,8 +87,17 @@ const AdminDashboard = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch(`${backendUrl}/api/bookings`, {
         signal: controller.signal,
+        headers,
       });
       clearTimeout(timeoutId);
 
