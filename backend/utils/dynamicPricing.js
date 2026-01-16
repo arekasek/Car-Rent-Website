@@ -1,161 +1,178 @@
 const supabase = require("../config/supabase");
 
-/**
- * Calculate dynamic price based on occupancy rate in the current month
- * Algorithm: Higher occupancy (fewer available days) = Higher price multiplier
- *
- * Price multiplier tiers based on occupancy:
- * - 0-10% booked: 1.0x (base price)
- * - 11-25% booked: 1.1x (10% increase)
- * - 26-40% booked: 1.25x (25% increase)
- * - 41-60% booked: 1.5x (50% increase)
- * - 61%+ booked: 1.75x (75% increase)
- */
-const calculatePriceMultiplier = (occupancyRate) => {
-  if (occupancyRate <= 0.1) return 1.0;
-  if (occupancyRate <= 0.25) return 1.1;
-  if (occupancyRate <= 0.4) return 1.25;
-  if (occupancyRate <= 0.6) return 1.5;
-  return 1.75;
-};
-
-/**
- * Get the occupancy rate for a specific car in the current month
- * Returns the percentage of days that are booked
- */
-const getMonthlyOccupancyRate = async (carId) => {
+async function getDynamicPrice(
+  basePrice,
+  carId,
+  startDate = null,
+  endDate = null
+) {
   try {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-
-    // Get first and last day of current month
-    const firstDay = new Date(year, month, 1).toISOString().split("T")[0];
-    const lastDay = new Date(year, month + 1, 0).toISOString().split("T")[0];
-
-    // Total days in month
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    console.log(
-      `[Pricing] Checking car ${carId} for month ${month + 1}/${year}`
-    );
-    console.log(`[Pricing] Date range: ${firstDay} to ${lastDay}`);
-
-    // Get all confirmed and completed bookings for this car in the current month
-    const { data, error } = await supabase
+    const { data: bookings, error } = await supabase
       .from("bookings")
-      .select("start_date, end_date, status")
+      .select("start_date, end_date")
       .eq("car_id", carId)
-      .in("status", ["confirmed", "completed"]);
+      .eq("status", "confirmed");
 
     if (error) {
-      console.error("Error fetching monthly bookings:", error);
-      return { bookedDays: 0, occupancyRate: 0, daysInMonth };
+      console.error("Error fetching bookings:", error);
+      return {
+        basePrice,
+        dynamicPrice: basePrice,
+        multiplier: 1,
+        bookedDays: 0,
+        availableDays: 30,
+        totalDays: 30,
+        occupancyPercentage: 0,
+        demandLevel: "low",
+      };
     }
 
-    // Filter bookings that overlap with current month
-    const bookings = (data || []).filter((booking) => {
-      const bookingStart = new Date(booking.start_date);
-      const bookingEnd = new Date(booking.end_date);
-      const monthStart = new Date(year, month, 1);
-      const monthEnd = new Date(year, month + 1, 0);
+    let rangeStart, rangeEnd;
 
-      // Check if booking overlaps with the month
-      return bookingStart <= monthEnd && bookingEnd >= monthStart;
-    });
+    if (startDate && endDate) {
+      rangeStart = new Date(startDate);
+      rangeEnd = new Date(endDate);
+    } else {
+      const today = new Date();
+      rangeStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      rangeEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    }
 
-    console.log(
-      `[Pricing] Found ${bookings.length} overlapping bookings for car ${carId}`
+    const months = [];
+    let currentDate = new Date(
+      rangeStart.getFullYear(),
+      rangeStart.getMonth(),
+      1
     );
 
-    // Calculate total booked days
-    let totalBookedDays = 0;
+    while (currentDate <= rangeEnd) {
+      const monthKey = `${currentDate.getFullYear()}-${String(
+        currentDate.getMonth()
+      ).padStart(2, "0")}`;
+      if (!months.find((m) => m.key === monthKey)) {
+        const monthStart = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          1
+        );
+        const monthEnd = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth() + 1,
+          0
+        );
 
-    bookings.forEach((booking) => {
-      const startDate = new Date(booking.start_date);
-      const endDate = new Date(booking.end_date);
+        months.push({
+          key: monthKey,
+          year: currentDate.getFullYear(),
+          month: currentDate.getMonth(),
+          start: monthStart,
+          end: monthEnd,
+        });
+      }
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
 
-      // Clamp dates to current month
-      const monthStart = new Date(year, month, 1);
-      const monthEnd = new Date(year, month + 1, 0);
+    let totalMonthBookedDays = 0;
+    let totalMonthDays = 0;
 
-      const clampedStart = startDate < monthStart ? monthStart : startDate;
-      const clampedEnd = endDate > monthEnd ? monthEnd : endDate;
+    months.forEach((monthInfo) => {
+      const monthStart = monthInfo.start;
+      const monthEnd = monthInfo.end;
+      const daysInMonth = monthEnd.getDate();
+      let monthBookedDays = 0;
 
-      // Count days between start and end (inclusive)
-      const days =
-        Math.ceil((clampedEnd - clampedStart) / (1000 * 60 * 60 * 24)) + 1;
-      totalBookedDays += days;
+      if (bookings && bookings.length > 0) {
+        bookings.forEach((booking) => {
+          const bookingStart = new Date(booking.start_date);
+          const bookingEnd = new Date(booking.end_date);
 
-      console.log(
-        `[Pricing] Booking ${booking.status}: ${booking.start_date} to ${booking.end_date} = ${days} days (car ${carId})`
-      );
+          const overlapStart = new Date(
+            Math.max(bookingStart.getTime(), monthStart.getTime())
+          );
+          const overlapEnd = new Date(
+            Math.min(bookingEnd.getTime(), monthEnd.getTime())
+          );
+
+          if (overlapStart <= overlapEnd) {
+            monthBookedDays += Math.ceil(
+              (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24)
+            );
+          }
+        });
+      }
+
+      totalMonthBookedDays += monthBookedDays;
+      totalMonthDays += daysInMonth;
     });
 
-    const occupancyRate = totalBookedDays / daysInMonth;
+    const occupancyPercentage =
+      totalMonthDays > 0 ? (totalMonthBookedDays / totalMonthDays) * 100 : 0;
 
     console.log(
-      `[Pricing] Car ${carId}: ${totalBookedDays}/${daysInMonth} days booked (${Math.round(
-        occupancyRate * 100
-      )}%)`
+      `[Pricing Debug] Car ID: ${carId}, Start: ${startDate || "none"}, End: ${
+        endDate || "none"
+      }`
+    );
+    console.log(
+      `[Pricing Debug] Months: ${months.map((m) => m.key).join(", ")}`
+    );
+    console.log(
+      `[Pricing Debug] Total Month Days: ${totalMonthDays}, Booked Days: ${totalMonthBookedDays}, Occupancy: ${occupancyPercentage.toFixed(
+        2
+      )}%`
     );
 
-    return {
-      bookedDays: totalBookedDays,
-      occupancyRate: occupancyRate,
-      daysInMonth,
-    };
-  } catch (err) {
-    console.error("Error calculating occupancy rate:", err);
-    return { bookedDays: 0, occupancyRate: 0, daysInMonth: 31 };
-  }
-};
+    const totalDays = Math.ceil(
+      (rangeEnd - rangeStart) / (1000 * 60 * 60 * 24)
+    );
+    const bookedDays = Math.ceil((totalDays * occupancyPercentage) / 100);
+    const availableDays = totalDays - bookedDays;
 
-/**
- * Calculate dynamic price for a car based on occupancy
- */
-const getDynamicPrice = async (basePrice, carId) => {
-  try {
-    const occupancyData = await getMonthlyOccupancyRate(carId);
-    const occupancyRate = occupancyData.occupancyRate;
-    const multiplier = calculatePriceMultiplier(occupancyRate);
-    const dynamicPrice = basePrice * multiplier;
+    let multiplier = 1;
+    let demandLevel = "low";
 
-    // Determine demand level
-    let demandLevel;
-    if (occupancyRate <= 0.1) demandLevel = "low";
-    else if (occupancyRate <= 0.25) demandLevel = "medium";
-    else if (occupancyRate <= 0.4) demandLevel = "high";
-    else if (occupancyRate <= 0.6) demandLevel = "very-high";
-    else demandLevel = "extreme";
+    if (occupancyPercentage >= 80) {
+      multiplier = 1.5; // 50% increase
+      demandLevel = "very-high";
+    } else if (occupancyPercentage >= 60) {
+      multiplier = 1.3; // 30% increase
+      demandLevel = "high";
+    } else if (occupancyPercentage >= 40) {
+      multiplier = 1.1; // 10% increase
+      demandLevel = "medium";
+    } else if (occupancyPercentage >= 20) {
+      multiplier = 0.95; // 5% discount
+      demandLevel = "low";
+    } else {
+      multiplier = 0.85; // 15% discount
+      demandLevel = "very-low";
+    }
+
+    const dynamicPrice = Math.round(basePrice * multiplier * 100) / 100;
 
     return {
       basePrice,
-      dynamicPrice: Math.round(dynamicPrice * 100) / 100,
-      multiplier: Math.round(multiplier * 100) / 100,
-      bookedDays: occupancyData.bookedDays,
-      totalDays: occupancyData.daysInMonth,
-      occupancyPercentage: Math.round(occupancyRate * 100),
-      availableDays: occupancyData.daysInMonth - occupancyData.bookedDays,
+      dynamicPrice,
+      multiplier,
+      bookedDays,
+      availableDays,
+      totalDays,
+      occupancyPercentage: Math.round(occupancyPercentage * 100) / 100,
       demandLevel,
     };
-  } catch (err) {
-    console.error("Error calculating dynamic price:", err);
+  } catch (error) {
+    console.error("Error calculating dynamic price:", error);
     return {
       basePrice,
       dynamicPrice: basePrice,
-      multiplier: 1.0,
+      multiplier: 1,
       bookedDays: 0,
-      totalDays: 31,
+      availableDays: 30,
+      totalDays: 30,
       occupancyPercentage: 0,
-      availableDays: 31,
       demandLevel: "low",
     };
   }
-};
+}
 
-module.exports = {
-  calculatePriceMultiplier,
-  getMonthlyOccupancyRate,
-  getDynamicPrice,
-};
+module.exports = { getDynamicPrice };

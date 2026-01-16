@@ -1,6 +1,6 @@
 import { Exo } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
+import Navbar from "../components/layout/Navbar";
 import { Providers } from "./providers";
 
 const exo = Exo({ subsets: ["latin"] });

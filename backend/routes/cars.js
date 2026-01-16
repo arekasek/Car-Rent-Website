@@ -74,6 +74,39 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// Get pricing for a specific date range
+router.get("/:id/pricing", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json({ error: "startDate and endDate are required" });
+    }
+
+    const { data, error } = await supabase
+      .from("cars")
+      .select("price")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return res.status(404).json({ error: "Car not found" });
+    }
+
+    // Calculate dynamic pricing for the specific date range
+    const pricing = await getDynamicPrice(data.price, id, startDate, endDate);
+
+    return res.json(pricing);
+  } catch (err) {
+    console.error("Error fetching pricing:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.post("/", async (req, res) => {
   try {
     const { brand, model, color, imagefront, price, data } = req.body;

@@ -42,6 +42,7 @@ function CarInfoCard({
   const { user } = useAuth();
   const router = useRouter();
   const carList = Array.isArray(cars) ? cars : [];
+  const [carBookingStatus, setCarBookingStatus] = React.useState({});
 
   const filteredCars = carList.filter((car) => {
     if (!car || !car.data) return false;
@@ -117,6 +118,44 @@ function CarInfoCard({
   const getSeats = (car) => {
     return parseInt(car?.data?.seats || 0, 10) || 0;
   };
+
+  const hasBookings = (carId) => {
+    return carBookingStatus[carId] === true;
+  };
+
+  React.useEffect(() => {
+    const fetchBookingStatus = async () => {
+      const backendUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+      const statusMap = {};
+      const today = new Date().toISOString().split("T")[0];
+
+      for (const car of carList) {
+        try {
+          const response = await fetch(
+            `${backendUrl}/api/bookings/car/${car.id}/booked-dates`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const bookedDates = data.bookedDates || [];
+            statusMap[car.id] = bookedDates.includes(today);
+            console.log(
+              `Car ${car.id}: Today (${today}) booked?`,
+              statusMap[car.id]
+            );
+          }
+        } catch (error) {
+          console.error(`Error fetching bookings for car ${car.id}:`, error);
+          statusMap[car.id] = false;
+        }
+      }
+      setCarBookingStatus(statusMap);
+    };
+
+    if (carList.length > 0) {
+      fetchBookingStatus();
+    }
+  }, [carList]);
 
   const sortedCars = [...filteredCars].sort((a, b) => {
     switch (sortOption) {
@@ -200,8 +239,14 @@ function CarInfoCard({
             </div>
 
             <div className="z-10 flex flex-row items-center gap-2">
-              <div className="bg-green-500/80 px-3 py-1 rounded-full text-green-900 font-sans text-xs font-semibold">
-                Available
+              <div
+                className={`px-3 py-1 rounded-full font-sans text-xs font-semibold ${
+                  hasBookings(car.id)
+                    ? "bg-red-500/80 text-red-900"
+                    : "bg-green-500/80 text-green-900"
+                }`}
+              >
+                {hasBookings(car.id) ? "Unavailable Today" : "Available"}
               </div>
 
               {likedCars.includes(car) ? (

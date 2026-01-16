@@ -42,6 +42,8 @@ export default function CarDetailPage() {
   const [endDate, setEndDate] = useState(null);
   const [totalCost, setTotalCost] = useState(0);
   const [bookedDates, setBookedDates] = useState([]);
+  const [dynamicPricing, setDynamicPricing] = useState(null);
+  const [isTodayBooked, setIsTodayBooked] = useState(false);
 
   useEffect(() => {
     const loadCar = async () => {
@@ -58,6 +60,7 @@ export default function CarDetailPage() {
           );
           if (response.ok) {
             const data = await response.json();
+            console.log("Booked dates fetched:", data.bookedDates);
             setBookedDates(data.bookedDates || []);
           }
         }
@@ -72,6 +75,18 @@ export default function CarDetailPage() {
       loadCar();
     }
   }, [params.id]);
+
+  useEffect(() => {
+    if (bookedDates && bookedDates.length > 0) {
+      const today = new Date();
+      const todayStr = today.toISOString().split("T")[0];
+      console.log("Today's date:", todayStr);
+      console.log("Checking if today is in booked dates:", bookedDates);
+      const booked = bookedDates.includes(todayStr);
+      console.log("Is today booked?", booked);
+      setIsTodayBooked(booked);
+    }
+  }, [bookedDates]);
 
   if (loading) {
     return (
@@ -107,15 +122,36 @@ export default function CarDetailPage() {
   };
 
   const hasBookingConflict = () => {
-    if (!startDate || !endDate) return false;
+    if (!startDate) return false;
 
-    const selectedStart = new Date(startDate);
-    const selectedEnd = new Date(endDate);
+    const dateToString = (date) => {
+      const d = new Date(date);
+      return d.toISOString().split("T")[0];
+    };
 
-    return bookedDates.some((bookedDateStr) => {
-      const bookedDate = new Date(bookedDateStr);
-      return bookedDate >= selectedStart && bookedDate <= selectedEnd;
-    });
+    const selectedStartStr = dateToString(startDate);
+    const selectedEndStr = endDate ? dateToString(endDate) : selectedStartStr;
+
+    console.log("Checking conflict:");
+    console.log("Selected date range:", selectedStartStr, "to", selectedEndStr);
+    console.log("Booked dates:", bookedDates);
+
+    const bookedDateSet = new Set(bookedDates);
+
+    const currentDate = new Date(selectedStartStr);
+    const endDate_ = new Date(selectedEndStr);
+
+    while (currentDate <= endDate_) {
+      const dateStr = currentDate.toISOString().split("T")[0];
+      if (bookedDateSet.has(dateStr)) {
+        console.log(`Date ${dateStr} is booked - CONFLICT!`);
+        return true;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    console.log("No conflicts found");
+    return false;
   };
 
   const handleDateRangeChange = ({ startDate, endDate }) => {
@@ -125,8 +161,40 @@ export default function CarDetailPage() {
     if (startDate && endDate) {
       const diffTime = Math.abs(endDate - startDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      const dailyPrice = parseInt(getPrice(car)) || 0;
-      setTotalCost(diffDays * dailyPrice);
+
+      const startDateStr = startDate.toISOString().split("T")[0];
+      const endDateStr = endDate.toISOString().split("T")[0];
+
+      const fetchDynamicPrice = async () => {
+        try {
+          const backendUrl =
+            process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+          const response = await fetch(
+            `${backendUrl}/api/cars/${car.id}/pricing?startDate=${startDateStr}&endDate=${endDateStr}`
+          );
+
+          if (response.ok) {
+            const pricing = await response.json();
+            setDynamicPricing(pricing);
+            const totalCostForDates = diffDays * pricing.dynamicPrice;
+            setTotalCost(totalCostForDates);
+            console.log(
+              `Dynamic pricing: ${pricing.dynamicPrice}/day (multiplier: ${pricing.multiplier}, occupancy: ${pricing.occupancyPercentage}%)`
+            );
+          } else {
+            setDynamicPricing(null);
+            const dailyPrice = parseInt(getPrice(car)) || 0;
+            setTotalCost(diffDays * dailyPrice);
+          }
+        } catch (error) {
+          console.error("Error fetching dynamic price:", error);
+          setDynamicPricing(null);
+          const dailyPrice = parseInt(getPrice(car)) || 0;
+          setTotalCost(diffDays * dailyPrice);
+        }
+      };
+
+      fetchDynamicPrice();
     }
   };
 
@@ -151,8 +219,14 @@ export default function CarDetailPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="bg-green-500/80 px-4 py-2 rounded-full text-green-900 font-semibold">
-                Available
+              <div
+                className={`px-4 py-2 rounded-full font-semibold ${
+                  isTodayBooked
+                    ? "bg-red-500/80 text-red-900"
+                    : "bg-green-500/80 text-green-900"
+                }`}
+              >
+                {isTodayBooked ? "Booked Today" : "Available"}
               </div>
               <button onClick={() => setIsLiked(!isLiked)}>
                 {isLiked ? (
@@ -264,22 +338,81 @@ export default function CarDetailPage() {
                 {startDate && endDate && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Number of Days</span>
+                      <span className="text-gray-600">Rental Duration</span>
                       <span className="font-semibold">
                         {Math.ceil(
                           (endDate - startDate) / (1000 * 60 * 60 * 24)
-                        )}
+                        )}{" "}
+                        days
                       </span>
                     </div>
+                    {dynamicPricing && (
+                      <>
+                        <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                          <div className="flex justify-between mb-2">
+                            <span className="text-sm text-gray-700">
+                              Dynamic Price/Day
+                            </span>
+                            <span className="font-semibold text-blue-600">
+                              ${dynamicPricing.dynamicPrice.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between mb-2">
+                            <span className="text-sm text-gray-700">
+                              Demand Level
+                            </span>
+                            <span
+                              className={`text-sm font-semibold ${
+                                dynamicPricing.demandLevel === "very-high"
+                                  ? "text-red-600"
+                                  : dynamicPricing.demandLevel === "high"
+                                  ? "text-orange-600"
+                                  : dynamicPricing.demandLevel === "medium"
+                                  ? "text-yellow-600"
+                                  : "text-green-600"
+                              }`}
+                            >
+                              {dynamicPricing.demandLevel.replace("-", " ")}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-700">
+                              Occupancy
+                            </span>
+                            <span className="text-sm font-semibold text-gray-700">
+                              {dynamicPricing.occupancyPercentage.toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    )}
                     <div className="flex justify-between text-lg font-bold bg-blue-50 p-2 rounded">
                       <span className="text-gray-900">Total Cost</span>
-                      <span className="text-blue-600">${totalCost}</span>
+                      <span className="text-blue-600">
+                        ${totalCost.toFixed(2)}
+                      </span>
                     </div>
                   </>
                 )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Availability</span>
-                  <span className="font-semibold text-green-600">In Stock</span>
+                  {startDate && endDate ? (
+                    hasBookingConflict() ? (
+                      <span className="font-semibold text-red-600">Booked</span>
+                    ) : (
+                      <span className="font-semibold text-green-600">
+                        In Stock
+                      </span>
+                    )
+                  ) : isTodayBooked ? (
+                    <span className="font-semibold text-red-600">
+                      Booked Today
+                    </span>
+                  ) : (
+                    <span className="font-semibold text-green-600">
+                      In Stock
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -299,19 +432,32 @@ export default function CarDetailPage() {
                     if (startDate && endDate) {
                       const diffTime = Math.abs(endDate - startDate);
                       rentalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      addToCart(
+                        {
+                          ...car,
+                          startDate: startDate.toISOString().split("T")[0],
+                          endDate: endDate.toISOString().split("T")[0],
+                        },
+                        rentalDays
+                      );
+                    } else {
+                      addToCart(car, rentalDays);
                     }
-                    addToCart(car, rentalDays);
                     alert("Added to cart!");
                   }
                 }}
                 className={`w-full py-3 rounded-lg font-semibold text-lg transition ${
-                  user && !hasBookingConflict()
+                  user && startDate && endDate && !hasBookingConflict()
                     ? "bg-blue-600 text-white hover:bg-blue-700"
                     : "bg-gray-400 text-white cursor-not-allowed"
                 }`}
-                disabled={!user || hasBookingConflict()}
+                disabled={
+                  !user || !startDate || !endDate || hasBookingConflict()
+                }
               >
-                {hasBookingConflict()
+                {!startDate || !endDate
+                  ? "Select Dates to Continue"
+                  : hasBookingConflict()
                   ? "Dates Not Available"
                   : user
                   ? "Add to Cart"

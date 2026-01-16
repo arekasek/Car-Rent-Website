@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
@@ -9,6 +10,7 @@ import { ImCross } from "react-icons/im";
 import { MdDelete } from "react-icons/md";
 
 export default function ShoppingCartModal({ isOpen, onClose }) {
+  const router = useRouter();
   const { cartItems, removeFromCart, updateQuantity, getTotalPrice } =
     useCart();
   const { user } = useAuth();
@@ -130,7 +132,13 @@ export default function ShoppingCartModal({ isOpen, onClose }) {
                 ${getTotalPrice().toFixed(2)}
               </span>
             </div>
-            <button className="w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600 transition">
+            <button
+              onClick={() => {
+                onClose();
+                router.push("/checkout");
+              }}
+              className="w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600 transition"
+            >
               Proceed to Checkout
             </button>
           </div>
