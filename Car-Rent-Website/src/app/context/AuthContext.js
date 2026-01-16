@@ -41,12 +41,26 @@ export function AuthProvider({ children }) {
       try {
         const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
         const savedSession = localStorage.getItem(SESSION_STORAGE_KEY);
+
+        console.log(
+          "AuthContext loading - savedUser:",
+          savedUser ? "EXISTS" : "MISSING"
+        );
+        console.log(
+          "AuthContext loading - savedSession:",
+          savedSession ? "EXISTS" : "MISSING"
+        );
+        console.log("All localStorage keys:", Object.keys(localStorage));
+
         if (savedUser) {
           const parsedUser = JSON.parse(savedUser);
           setUser(parsedUser);
           if (savedSession) {
             const parsedSession = JSON.parse(savedSession);
+            console.log("Parsed session:", parsedSession);
             setSession(parsedSession);
+          } else {
+            console.warn("User exists but session is missing");
           }
           resetSessionTimer();
         } else {

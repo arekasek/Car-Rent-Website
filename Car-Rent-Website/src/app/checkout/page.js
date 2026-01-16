@@ -18,10 +18,18 @@ import {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, clearCart } = useCart();
-  const { user, session } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+
+  // Fallback: if session is null but user exists, try to get session from localStorage
+  const sessionFallback =
+    session ||
+    (typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("auth_session") || "null")
+      : null);
+
   const [formData, setFormData] = useState({
     email: user?.email || "",
     fullName: user?.fullName || "",
@@ -31,6 +39,16 @@ export default function CheckoutPage() {
     cardExpiry: "",
     cardCVC: "",
   });
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 pt-[10vh]">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Loading...</h1>
+        </div>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -70,7 +88,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (!session || !session.access_token) {
+  if (!sessionFallback || !sessionFallback.access_token) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 pt-[10vh]">
         <div className="text-center">
@@ -172,7 +190,7 @@ export default function CheckoutPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${sessionFallback.access_token}`,
           },
           body: JSON.stringify(bookingData),
         });
@@ -218,14 +236,17 @@ export default function CheckoutPage() {
           stripeId: `stripe_${Date.now()}_${bookingId}`,
         };
 
-        console.log("Creating payment with token:", session.access_token);
+        console.log(
+          "Creating payment with token:",
+          sessionFallback.access_token
+        );
         console.log("Payment data:", paymentData);
 
         return fetch(`${backendUrl}/api/payments`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${sessionFallback.access_token}`,
           },
           body: JSON.stringify(paymentData),
         });
