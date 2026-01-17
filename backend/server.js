@@ -24,7 +24,7 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
     maxAge: 86400,
-  })
+  }),
 );
 
 // Middleware
@@ -37,8 +37,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rate limiting (100 requests per minute per IP/user)
-app.use(rateLimiter(100, 60000));
+// Rate limiting (300 requests per minute per IP/user)
+app.use(rateLimiter(300, 60000));
 
 // Health check endpoint
 app.get("/health", (req, res) => {
@@ -80,9 +80,9 @@ app.listen(PORT, () => {
   console.log(
     `🌐 CORS enabled for: ${
       process.env.FRONTEND_URL || "http://localhost:3000"
-    }`
+    }`,
   );
-  console.log(`🛡️  Rate limiting: 100 req/min per IP`);
+  console.log(`🛡️  Rate limiting: 300 req/min per IP`);
 });
 
 module.exports = app;

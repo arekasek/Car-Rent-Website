@@ -142,9 +142,17 @@ const AdminDashboard = () => {
 
     try {
       if (editingId) {
+        const headers = {
+          "Content-Type": "application/json",
+        };
+
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
+        }
+
         const response = await fetch(`${backendUrl}/api/cars/${editingId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(formData),
         });
 
@@ -158,9 +166,17 @@ const AdminDashboard = () => {
           alert("Failed to update car");
         }
       } else {
+        const headers = {
+          "Content-Type": "application/json",
+        };
+
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
+        }
+
         const response = await fetch(`${backendUrl}/api/cars`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(formData),
         });
 
@@ -183,8 +199,17 @@ const AdminDashboard = () => {
     if (!window.confirm("Are you sure you want to delete this car?")) return;
 
     try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch(`${backendUrl}/api/cars/${id}`, {
         method: "DELETE",
+        headers,
       });
 
       if (response.ok) {
@@ -241,7 +266,7 @@ const AdminDashboard = () => {
       carRentals[car.id] = {
         car: car,
         rentals: bookings.filter(
-          (b) => b.car_id === car.id && b.status === "confirmed"
+          (b) => b.car_id === car.id && b.status === "confirmed",
         ),
       };
     });
@@ -263,7 +288,7 @@ const AdminDashboard = () => {
 
     cars.forEach((car) => {
       const carBookings = bookings.filter(
-        (b) => b.car_id === car.id && b.status === "confirmed"
+        (b) => b.car_id === car.id && b.status === "confirmed",
       ).length;
       if (carBookings > maxBookings) {
         maxBookings = carBookings;

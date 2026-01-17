@@ -71,7 +71,6 @@ const AdminDashboard = () => {
       }
 
       const data = await response.json();
-      // Handle both paginated response and array response
       const carsData = data.data || data;
       setCars(Array.isArray(carsData) ? carsData : []);
       setLoading(false);
