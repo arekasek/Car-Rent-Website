@@ -97,10 +97,10 @@ export default function Navbar() {
               <Link href="/offer" className="menu-link">
                 Offer
               </Link>
-              <Link href="/menu" className="menu-link">
+              <Link href="/contact" className="menu-link">
                 Contact
               </Link>
-              <Link href="/menu" className="menu-link">
+              <Link href="/aboutus" className="menu-link">
                 About us
               </Link>
             </div>
